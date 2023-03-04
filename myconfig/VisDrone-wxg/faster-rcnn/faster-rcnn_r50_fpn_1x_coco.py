@@ -4,7 +4,10 @@ _base_ = [
     '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
-# ======================== wandb & run ==============================
+# ======================== wandb & run =========================================================================================
+fp16 = dict(loss_scale=512.)
+
+# ===========================================
 TAGS = ["r50_fpn_1x"]
 GROUP_NAME = "faster-rcnn"
 ALGO_NAME = "faster-rcnn_r50_fpn_1x_coco"
@@ -21,17 +24,18 @@ Wandb_init_kwargs = dict(
 )
 visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
+# ==========================================
 import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 load_from = "https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth"
 
-# =============== datasets ===========================================
+# =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 16
+train_batch_size_per_gpu = 4
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 8
+train_num_workers = 4
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
