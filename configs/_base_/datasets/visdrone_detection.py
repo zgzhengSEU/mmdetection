@@ -12,6 +12,20 @@ val_data_prefix = 'images/val/'  # Prefix of val image path
 # Path of test annotation file
 test_ann_file = 'annotations/test.json'
 test_data_prefix = 'images/test/'  # Prefix of val image path
+
+# Batch size of a single GPU during training
+train_batch_size_per_gpu = 2
+# Worker to pre-fetch data for each single GPU during training
+train_num_workers = 2
+# Batch size of a single GPU during valing
+val_batch_size_per_gpu = 1
+# Worker to pre-fetch data for each single GPU during valing
+val_num_workers = 2
+# Batch size of a single GPU during valing
+test_batch_size_per_gpu = 1
+# Worker to pre-fetch data for each single GPU during valing
+test_num_workers = 2
+
 # file_client_args = dict(
 #     backend='petrel',
 #     path_mapping=dict({
@@ -38,8 +52,8 @@ test_pipeline = [
                    'scale_factor'))
 ]
 train_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
+    batch_size=train_batch_size_per_gpu,
+    num_workers=train_num_workers,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
     batch_sampler=dict(type='AspectRatioBatchSampler'),
@@ -52,8 +66,8 @@ train_dataloader = dict(
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
         pipeline=train_pipeline))
 val_dataloader = dict(
-    batch_size=1,
-    num_workers=2,
+    batch_size=val_batch_size_per_gpu,
+    num_workers=val_num_workers,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),
@@ -66,8 +80,8 @@ val_dataloader = dict(
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = dict(
-    batch_size=1,
-    num_workers=2,
+    batch_size=test_batch_size_per_gpu,
+    num_workers=test_num_workers,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),
