@@ -17,11 +17,12 @@ def parse_args():
     parser.add_argument(
         '--amp',
         action='store_true',
-        default=False,
+        default=True,
         help='enable automatic-mixed-precision training')
     parser.add_argument(
         '--auto-scale-lr',
         action='store_true',
+        default=True,
         help='enable automatically scaling LR.')
     parser.add_argument(
         '--resume',
