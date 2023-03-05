@@ -11,7 +11,7 @@ _base_ = [
 # ===========================================
 TAGS = ["casc_r50_fpn_20e"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_20e_coco"
+ALGO_NAME = "cascade-rcnn_r50_fpn_20e_coco_GA0010"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -49,3 +49,21 @@ test_num_workers = 2
 train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_num_workers)
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
+
+#=============== model ==========================================================================================================
+
+model = dict(
+    backbone=dict(
+        plugins=[
+            dict(
+                cfg=dict(
+                    type='GeneralizedAttention',
+                    spatial_range=-1,
+                    num_heads=8,
+                    attention_type='0010',
+                    kv_stride=2),
+                stages=(False, False, True, True),
+                position='after_conv2')
+        ],
+        dcn=dict(type='DCN', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, True, True, True)))
