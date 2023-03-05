@@ -143,9 +143,9 @@ class CascadeDoubleHeadRoIHead(BaseRoIHead):
         # bbox_feats = bbox_roi_extractor(x[:bbox_roi_extractor.num_inputs],
         #                                 rois)
         bbox_cls_feats = bbox_roi_extractor(
-            x[:self.bbox_roi_extractor.num_inputs], rois)
+            x[:bbox_roi_extractor.num_inputs], rois)
         bbox_reg_feats = bbox_roi_extractor(
-            x[:self.bbox_roi_extractor.num_inputs],
+            x[:bbox_roi_extractor.num_inputs],
             rois,
             roi_scale_factor=self.reg_roi_scale_factor)
         # do not support caffe_c4 model anymore
