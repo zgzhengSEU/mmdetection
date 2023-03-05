@@ -53,6 +53,7 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 # =============== model ========================================================================================================
 model = dict(
     roi_head=dict(
+        type='CascadeDoubleHeadRoIHead',
         reg_roi_scale_factor=1.3,
         bbox_head=[
             dict(
