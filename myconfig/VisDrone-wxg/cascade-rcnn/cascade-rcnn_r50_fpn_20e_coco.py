@@ -1,16 +1,17 @@
 _base_ = [
     '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
     '../../../configs/_base_/datasets/visdrone_detection.py',
-    '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
+    '../../../configs/_base_/schedules/schedule_20e.py', '../../../configs/_base_/default_runtime.py'
 ]
+
 
 # ======================== wandb & run =========================================================================================
 
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x"]
+TAGS = ["casc_r50_fpn_20e"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_coco"
+ALGO_NAME = "cascade-rcnn_r50_fpn_20e_coco"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -29,7 +30,7 @@ import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
-load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
+load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r50_fpn_20e_coco/cascade_rcnn_r50_fpn_20e_coco_bbox_mAP-0.41_20200504_175131-e9872a90.pth"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
