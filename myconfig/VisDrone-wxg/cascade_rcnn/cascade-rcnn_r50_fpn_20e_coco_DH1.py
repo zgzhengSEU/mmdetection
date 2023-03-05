@@ -9,9 +9,9 @@ _base_ = [
 
 
 # ===========================================
-TAGS = ["casc_r50_fpn_20e","DB"]
+TAGS = ["casc_r50_fpn_20e","DH"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_20e_coco_DH"
+ALGO_NAME = "cascade-rcnn_r50_fpn_20e_coco_DH1"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -70,8 +70,8 @@ model = dict(
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4,
@@ -87,8 +87,8 @@ model = dict(
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4,
@@ -104,6 +104,6 @@ model = dict(
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))]))
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))]))
 
