@@ -4,6 +4,7 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 from mmcv.cnn.bricks import Swish
 from mmengine.model import BaseModule
 
@@ -79,6 +80,13 @@ class BiFPNStage(nn.Module):
                     conv_bn_act_pattern=self.conv_bn_act_pattern,
                     norm_cfg=norm_cfg), MaxPool2dSamePadding(3, 2))
             self.p6_to_p7 = MaxPool2dSamePadding(3, 2)
+            self.p6_to_p7_new = nn.Sequential(
+                DownChannelBlock(
+                    self.in_channels[-1],
+                    self.out_channels,
+                    apply_norm=self.apply_bn_for_resampling,
+                    conv_bn_act_pattern=self.conv_bn_act_pattern,
+                    norm_cfg=norm_cfg), MaxPool2dSamePadding(3, 2))
             self.plast3_level_connection = DownChannelBlock(
                 self.in_channels[-3],
                 self.out_channels,
@@ -216,7 +224,13 @@ class BiFPNStage(nn.Module):
                 p5_in = self.plast2_down_channel(p5)           
                 p6_in = self.plast1_down_channel(p6)
                 # build feature map P7
-                p7_in = self.p6_to_p7(p6_in)
+                p7_in = self.p6_to_p7_new(p6)
+                # print("first p3: ", p3.shape)
+                # print("first p4: ", p4.shape) 
+                # print("first p5: ", p5.shape)   
+                # print("first p6: ", p6.shape)
+                # print("first p6_in: ", p6_in.shape)
+                # print("first p7_in: ", p7_in.shape)
         else:
             p3_in, p4_in, p5_in, p6_in, p7_in = x
 
@@ -224,9 +238,12 @@ class BiFPNStage(nn.Module):
         p6_w1 = self.p6_w1_relu(self.p6_w1)
         weight = p6_w1 / (torch.sum(p6_w1, dim=0) + self.epsilon)
         # Connections for P6_0 and P7_0 to P6_1 respectively
+        # print(p6_in.shape)
+        # print(p7_in.shape)
+        # print(self.p6_upsample(p7_in).shape)
         p6_up = self.conv6_up(
             self.combine(weight[0] * p6_in +
-                         weight[1] * self.p6_upsample(p7_in)))
+                         weight[1] * F.interpolate(p7_in, size=tuple(p6_in.shape[2:]), mode='nearest')))
 
         # Weights for P5_0 and P6_1 to P5_1
         p5_w1 = self.p5_w1_relu(self.p5_w1)
@@ -234,7 +251,8 @@ class BiFPNStage(nn.Module):
         # Connections for P5_0 and P6_1 to P5_1 respectively
         p5_up = self.conv5_up(
             self.combine(weight[0] * p5_in +
-                         weight[1] * self.p5_upsample(p6_up)))
+                         #weight[1] * self.p5_upsample(p6_up)))
+                         weight[1] * F.interpolate(p6_up, size=tuple(p5_in.shape[2:]), mode='nearest')))
 
         # Weights for P4_0 and P5_1 to P4_1
         p4_w1 = self.p4_w1_relu(self.p4_w1)
@@ -242,7 +260,8 @@ class BiFPNStage(nn.Module):
         # Connections for P4_0 and P5_1 to P4_1 respectively
         p4_up = self.conv4_up(
             self.combine(weight[0] * p4_in +
-                         weight[1] * self.p4_upsample(p5_up)))
+                         #weight[1] * self.p4_upsample(p5_up)))
+                         weight[1] * F.interpolate(p5_up, size=tuple(p4_in.shape[2:]), mode='nearest')))
 
         # Weights for P3_0 and P4_1 to P3_2
         p3_w1 = self.p3_w1_relu(self.p3_w1)
@@ -250,7 +269,8 @@ class BiFPNStage(nn.Module):
         # Connections for P3_0 and P4_1 to P3_2 respectively
         p3_out = self.conv3_up(
             self.combine(weight[0] * p3_in +
-                         weight[1] * self.p3_upsample(p4_up)))
+                         #weight[1] * self.p3_upsample(p4_up)))
+                         weight[1] * F.interpolate(p4_up, size=tuple(p3_in.shape[2:]), mode='nearest')))
 
         if self.first_time:
             if self.in_channels_len == 3:
