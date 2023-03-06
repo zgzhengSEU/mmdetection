@@ -11,7 +11,7 @@ fp16 = dict(loss_scale=512.)
 # ===========================================
 TAGS = ["casc_r50_fpn_20e","DB"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_20e_coco_DH"
+ALGO_NAME = "cascade-rcnn_r50_fpn_20e_DH"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
