@@ -111,11 +111,17 @@ class BiFPNStage(nn.Module):
         self.p4_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.p3_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         
-        self.p6_upsample_CARAFE = CARAFEPack(self.in_channels[-1] * 2, scale_factor=2)
-        self.p5_upsample_CARAFE = CARAFEPack(self.in_channels[-2] * 2, scale_factor=2)
-        self.p4_upsample_CARAFE = CARAFEPack(self.in_channels[-3] * 2, scale_factor=2)
-        self.p3_upsample_CARAFE = CARAFEPack(self.in_channels[-4] * 2, scale_factor=2)
-
+        if self.first_time:
+            self.p6_upsample_CARAFE = CARAFEPack(self.in_channels[-1] * 2, scale_factor=2)
+            self.p5_upsample_CARAFE = CARAFEPack(self.in_channels[-2] * 2, scale_factor=2)
+            self.p4_upsample_CARAFE = CARAFEPack(self.in_channels[-3] * 2, scale_factor=2)
+            self.p3_upsample_CARAFE = CARAFEPack(self.in_channels[-4] * 2, scale_factor=2)  
+        else:
+            self.p6_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
+            self.p5_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
+            self.p4_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
+            self.p3_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
+          
         # bottom to up: feature map down_sample module
         self.p4_down_sample = MaxPool2dSamePadding(3, 2)
         self.p5_down_sample = MaxPool2dSamePadding(3, 2)
