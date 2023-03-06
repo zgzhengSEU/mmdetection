@@ -53,6 +53,7 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 norm_cfg = dict(type='SyncBN', requires_grad=True, eps=1e-3, momentum=0.01)
 model = dict(
     neck=dict(
+        _delete_=True,
         type='BiFPN',
         num_stages=3,
         in_channels=[256, 512, 1024, 2048],
