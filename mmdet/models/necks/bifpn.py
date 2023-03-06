@@ -45,7 +45,7 @@ class BiFPNStage(nn.Module):
         self.use_meswish = use_meswish
         self.norm_cfg = norm_cfg
         self.epsilon = epsilon
-
+        self.in_channels_len = len(in_channels)
         if self.first_time:
             self.plast1_down_channel = DownChannelBlock(
                 self.in_channels[-1],
@@ -79,19 +79,24 @@ class BiFPNStage(nn.Module):
                     conv_bn_act_pattern=self.conv_bn_act_pattern,
                     norm_cfg=norm_cfg), MaxPool2dSamePadding(3, 2))
             self.p6_to_p7 = MaxPool2dSamePadding(3, 2)
-            self.p4_level_connection = DownChannelBlock(
+            self.plast3_level_connection = DownChannelBlock(
+                self.in_channels[-3],
+                self.out_channels,
+                apply_norm=self.apply_bn_for_resampling,
+                conv_bn_act_pattern=self.conv_bn_act_pattern,
+                norm_cfg=norm_cfg)
+            self.plast2_level_connection = DownChannelBlock(
                 self.in_channels[-2],
                 self.out_channels,
                 apply_norm=self.apply_bn_for_resampling,
                 conv_bn_act_pattern=self.conv_bn_act_pattern,
                 norm_cfg=norm_cfg)
-            self.p5_level_connection = DownChannelBlock(
+            self.plast1_level_connection = DownChannelBlock(
                 self.in_channels[-1],
                 self.out_channels,
                 apply_norm=self.apply_bn_for_resampling,
                 conv_bn_act_pattern=self.conv_bn_act_pattern,
                 norm_cfg=norm_cfg)
-
         self.p6_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.p5_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.p4_upsample = nn.Upsample(scale_factor=2, mode='nearest')
@@ -189,8 +194,8 @@ class BiFPNStage(nn.Module):
 
     def forward(self, x):
         if self.first_time:
-            assert len(self.in_channels) == 3 or len(self.in_channels) == 4, ('in_channels num error')
-            if len(self.in_channels) == 3:
+            assert self.in_channels_len == 3 or self.in_channels_len == 4, ('in_channels num error')
+            if self.in_channels_len == 3:
                 p3, p4, p5 = x
 
                 p3_in = self.plast3_down_channel(p3)
@@ -200,7 +205,7 @@ class BiFPNStage(nn.Module):
                 p6_in = self.p5_to_p6(p5)
                 # build feature map P7
                 p7_in = self.p6_to_p7(p6_in)
-            elif len(self.in_channels) == 4:
+            elif self.in_channels_len == 4:
                 p3, p4, p5, p6 = x
                 # build feature map P6
                 # p6_in = self.p5_to_p6(p5)
@@ -248,9 +253,13 @@ class BiFPNStage(nn.Module):
                          weight[1] * self.p3_upsample(p4_up)))
 
         if self.first_time:
-            p4_in = self.p4_level_connection(p4)
-            p5_in = self.p5_level_connection(p5)
-
+            if self.in_channels_len == 3:
+                p4_in = self.plast2_level_connection(p4)
+                p5_in = self.plast1_level_connection(p5)
+            elif self.in_channels_len == 4:
+                p4_in = self.plast3_level_connection(p4)
+                p5_in = self.plast2_level_connection(p5)                
+                p6_in = self.plast1_level_connection(p6)
         # Weights for P4_0, P4_1 and P3_2 to P4_2
         p4_w2 = self.p4_w2_relu(self.p4_w2)
         weight = p4_w2 / (torch.sum(p4_w2, dim=0) + self.epsilon)
