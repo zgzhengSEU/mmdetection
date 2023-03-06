@@ -108,3 +108,7 @@ model = dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))]))
 
+# ===================== optimizer ======================================================================================================
+optim_wrapper = dict(
+    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
+    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
