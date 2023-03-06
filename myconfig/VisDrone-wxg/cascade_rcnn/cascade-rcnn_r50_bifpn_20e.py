@@ -50,7 +50,7 @@ val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_wor
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
 # =============== model ============================================================================================================
-norm_cfg = dict(type='SyncBN', requires_grad=True, eps=1e-3, momentum=0.01)
+# norm_cfg = dict(type='BN', requires_grad=True, eps=1e-3, momentum=0.01)
 model = dict(
     neck=dict(
         _delete_=True,
@@ -58,7 +58,6 @@ model = dict(
         num_stages=6,
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
-        start_level=0,
-        norm_cfg=norm_cfg))   
+        start_level=0))   
 
 
