@@ -6,12 +6,9 @@ _base_ = [
 
 
 # ======================== wandb & run =========================================================================================
-
-
-# ===========================================
 TAGS = ["casc_r50_fpn_20e","DB"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_20e_DH"
+ALGO_NAME = "cascade-rcnn_r50_fpn_20e_DH_GA0010"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -34,9 +31,9 @@ load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascad
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 4
+train_batch_size_per_gpu = 2
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 4
+train_num_workers = 2
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
@@ -123,6 +120,6 @@ model = dict(
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))]))
 
 # ===================== optimizer ======================================================================================================
-# optim_wrapper = dict(
-#     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
-#     paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
+optim_wrapper = dict(
+    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
+    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
