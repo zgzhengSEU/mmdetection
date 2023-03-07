@@ -10,7 +10,7 @@ model = dict(
     data_preprocessor=dict(batch_augments=batch_augments),
     train_cfg=dict(rpn=dict(allowed_border=-1)))
 
-train_dataloader = dict(batch_size=4, num_workers=8)
+train_dataloader = dict(batch_size=2, num_workers=2)
 # Enable automatic-mixed-precision training with AmpOptimWrapper.
 optim_wrapper = dict(
     type='AmpOptimWrapper',
