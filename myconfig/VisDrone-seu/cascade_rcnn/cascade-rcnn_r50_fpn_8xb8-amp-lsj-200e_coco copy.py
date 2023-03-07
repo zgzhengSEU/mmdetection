@@ -1,6 +1,6 @@
 _base_ = [
-    '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
-    '../../../configs/common/visdrone-lsj-200e_coco-detection.py'
+    '../_base_/models/cascade-rcnn_r50_fpn.py',
+    '../common/lsj-200e_coco-detection.py'
 ]
 image_size = (1024, 1024)
 batch_augments = [dict(type='BatchFixedSizePad', size=image_size)]
@@ -20,4 +20,4 @@ optim_wrapper = dict(
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (8 GPUs) x (8 samples per GPU)
-auto_scale_lr = dict(enable=False, base_batch_size=64)
+auto_scale_lr = dict(base_batch_size=64)

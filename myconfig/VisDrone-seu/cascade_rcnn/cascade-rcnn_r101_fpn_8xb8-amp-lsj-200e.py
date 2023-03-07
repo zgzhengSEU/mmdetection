@@ -10,7 +10,7 @@ model = dict(
     data_preprocessor=dict(batch_augments=batch_augments),
     train_cfg=dict(rpn=dict(allowed_border=-1)))
 
-train_dataloader = dict(batch_size=8, num_workers=4)
+train_dataloader = dict(batch_size=16, num_workers=8)
 # Enable automatic-mixed-precision training with AmpOptimWrapper.
 optim_wrapper = dict(
     type='AmpOptimWrapper',
@@ -21,3 +21,9 @@ optim_wrapper = dict(
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (8 GPUs) x (8 samples per GPU)
 auto_scale_lr = dict(enable=False, base_batch_size=64)
+
+model = dict(
+    backbone=dict(
+        depth=101,
+        init_cfg=dict(type='Pretrained',
+                      checkpoint='torchvision://resnet101')))
