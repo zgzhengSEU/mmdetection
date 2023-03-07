@@ -271,7 +271,7 @@ class BiFPNStage(nn.Module):
         # print(self.p6_upsample(p7_in).shape)
         p6_up = self.conv6_up(
             self.combine(
-                self.tensor_add(weight[0] * p6_in +
+                self.tensor_add(weight[0] * p6_in,
                          weight[1] * self.p6_upsample(p7_in))))
 
         # Weights for P5_0 and P6_1 to P5_1
@@ -280,7 +280,7 @@ class BiFPNStage(nn.Module):
         # Connections for P5_0 and P6_1 to P5_1 respectively
         p5_up = self.conv5_up(
             self.combine(
-                self.tensor_add(weight[0] * p5_in +
+                self.tensor_add(weight[0] * p5_in,
                          weight[1] * self.p5_upsample(p6_up))))
                          #weight[1] * F.interpolate(p6_up, size=tuple(p5_in.shape[2:]), mode='nearest')))
 
@@ -290,7 +290,7 @@ class BiFPNStage(nn.Module):
         # Connections for P4_0 and P5_1 to P4_1 respectively
         p4_up = self.conv4_up(
             self.combine(
-                self.tensor_add(weight[0] * p4_in +
+                self.tensor_add(weight[0] * p4_in,
                          weight[1] * self.p4_upsample(p5_up))))
                          #weight[1] * F.interpolate(p5_up, size=tuple(p4_in.shape[2:]), mode='nearest')))
 
@@ -300,7 +300,7 @@ class BiFPNStage(nn.Module):
         # Connections for P3_0 and P4_1 to P3_2 respectively
         p3_out = self.conv3_up(
             self.combine(
-                self.tensor_add(weight[0] * p3_in +
+                self.tensor_add(weight[0] * p3_in,
                          weight[1] * self.p3_upsample(p4_up))))
                          #weight[1] * F.interpolate(p4_up, size=tuple(p3_in.shape[2:]), mode='nearest')))
 
