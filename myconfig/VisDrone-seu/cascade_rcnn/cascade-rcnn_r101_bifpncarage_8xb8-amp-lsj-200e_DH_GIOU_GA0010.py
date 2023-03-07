@@ -2,6 +2,31 @@ _base_ = [
     '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
     '../../../configs/common/visdrone-lsj-200e_coco-detection.py'
 ]
+
+# ======================== wandb & run =========================================================================================
+TAGS = ["casc_r50_fpn_20e","DH", "GA0010", "bifpncarafe","GIOU"]
+GROUP_NAME = "cascade-rcnn"
+ALGO_NAME = "cascade-rcnn_r101_bifpncarage_8xb8-amp-lsj-200e_DH_GIOU_GA0010"
+DATASET_NAME = "VisDrone"
+
+Wandb_init_kwargs = dict(
+    project=DATASET_NAME,
+    group=GROUP_NAME,
+    name=ALGO_NAME,
+    tags=TAGS,
+    resume="allow",
+    # id="",
+    allow_val_change=True
+)
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+
+# ==========================================
+import datetime as dt
+NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
+work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
+
+# ==================================================================================================================================
+
 image_size = (1024, 1024)
 batch_augments = [dict(type='BatchFixedSizePad', size=image_size)]
 
