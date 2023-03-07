@@ -8,5 +8,8 @@ module load anaconda3
 module load cuda-11.6
 module load gcc-9.3.0
 source activate mmdet3
+export http_proxy="http://10.210.126.3:9999"
+export https_proxy="http://10.210.126.3:9999"
+export ALL_proxy="http://10.210.126.3:9999"
 cd ~/mmdet3
 bash tools/dist_train.sh myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_bifpncarage_8xb8-amp-lsj-200e_DH_GIOU_GA0010.py 8
