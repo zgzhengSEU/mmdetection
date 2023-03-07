@@ -199,7 +199,35 @@ class BiFPNStage(nn.Module):
             x = self.swish(x)
 
         return x
+    
+    def slice_as(self, src, dst):
+        """Slice ``src`` as ``dst``
 
+        Note:
+            ``src`` should have the same or larger size than ``dst``.
+
+        Args:
+            src (torch.Tensor): Tensors to be sliced.
+            dst (torch.Tensor): ``src`` will be sliced to have the same
+                size as ``dst``.
+
+        Returns:
+            torch.Tensor: Sliced tensor.
+        """
+        assert (src.size(2) >= dst.size(2)) and (src.size(3) >= dst.size(3))
+        if src.size(2) == dst.size(2) and src.size(3) == dst.size(3):
+            return src
+        else:
+            return src[:, :, :dst.size(2), :dst.size(3)]
+
+    def tensor_add(self, a, b):
+        """Add tensors ``a`` and ``b`` that might have different sizes."""
+        if a.size() == b.size():
+            c = a + b
+        else:
+            c = a + self.slice_as(b, a)
+        return c
+    
     def forward(self, x):
         if self.first_time:
             assert self.in_channels_len == 3 or self.in_channels_len == 4, ('in_channels num error')
@@ -242,35 +270,39 @@ class BiFPNStage(nn.Module):
         # print(p7_in.shape)
         # print(self.p6_upsample(p7_in).shape)
         p6_up = self.conv6_up(
-            self.combine(weight[0] * p6_in +
-                         weight[1] * F.interpolate(p7_in, size=tuple(p6_in.shape[2:]), mode='nearest')))
+            self.combine(
+                self.tensor_add(weight[0] * p6_in +
+                         weight[1] * self.p6_upsample(p7_in))))
 
         # Weights for P5_0 and P6_1 to P5_1
         p5_w1 = self.p5_w1_relu(self.p5_w1)
         weight = p5_w1 / (torch.sum(p5_w1, dim=0) + self.epsilon)
         # Connections for P5_0 and P6_1 to P5_1 respectively
         p5_up = self.conv5_up(
-            self.combine(weight[0] * p5_in +
-                         #weight[1] * self.p5_upsample(p6_up)))
-                         weight[1] * F.interpolate(p6_up, size=tuple(p5_in.shape[2:]), mode='nearest')))
+            self.combine(
+                self.tensor_add(weight[0] * p5_in +
+                         weight[1] * self.p5_upsample(p6_up))))
+                         #weight[1] * F.interpolate(p6_up, size=tuple(p5_in.shape[2:]), mode='nearest')))
 
         # Weights for P4_0 and P5_1 to P4_1
         p4_w1 = self.p4_w1_relu(self.p4_w1)
         weight = p4_w1 / (torch.sum(p4_w1, dim=0) + self.epsilon)
         # Connections for P4_0 and P5_1 to P4_1 respectively
         p4_up = self.conv4_up(
-            self.combine(weight[0] * p4_in +
-                         #weight[1] * self.p4_upsample(p5_up)))
-                         weight[1] * F.interpolate(p5_up, size=tuple(p4_in.shape[2:]), mode='nearest')))
+            self.combine(
+                self.tensor_add(weight[0] * p4_in +
+                         weight[1] * self.p4_upsample(p5_up))))
+                         #weight[1] * F.interpolate(p5_up, size=tuple(p4_in.shape[2:]), mode='nearest')))
 
         # Weights for P3_0 and P4_1 to P3_2
         p3_w1 = self.p3_w1_relu(self.p3_w1)
         weight = p3_w1 / (torch.sum(p3_w1, dim=0) + self.epsilon)
         # Connections for P3_0 and P4_1 to P3_2 respectively
         p3_out = self.conv3_up(
-            self.combine(weight[0] * p3_in +
-                         #weight[1] * self.p3_upsample(p4_up)))
-                         weight[1] * F.interpolate(p4_up, size=tuple(p3_in.shape[2:]), mode='nearest')))
+            self.combine(
+                self.tensor_add(weight[0] * p3_in +
+                         weight[1] * self.p3_upsample(p4_up))))
+                         #weight[1] * F.interpolate(p4_up, size=tuple(p3_in.shape[2:]), mode='nearest')))
 
         if self.first_time:
             if self.in_channels_len == 3:

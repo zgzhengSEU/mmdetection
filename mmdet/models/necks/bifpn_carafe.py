@@ -8,6 +8,7 @@ from torch.nn import functional as F
 from mmcv.cnn.bricks import Swish
 from mmengine.model import BaseModule
 from mmcv.ops.carafe import CARAFEPack
+from mmcv.cnn import build_upsample_layer
 
 from mmdet.registry import MODELS
 from mmdet.utils import MultiConfig, OptConfigType
@@ -111,17 +112,22 @@ class BiFPNStage(nn.Module):
         self.p4_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.p3_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         
-        if self.first_time:
-            self.p6_upsample_CARAFE = CARAFEPack(self.in_channels[-1] * 2, scale_factor=2)
-            self.p5_upsample_CARAFE = CARAFEPack(self.in_channels[-2] * 2, scale_factor=2)
-            self.p4_upsample_CARAFE = CARAFEPack(self.in_channels[-3] * 2, scale_factor=2)
-            self.p3_upsample_CARAFE = CARAFEPack(self.in_channels[-4] * 2, scale_factor=2)  
-        else:
-            self.p6_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
-            self.p5_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
-            self.p4_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
-            self.p3_upsample_CARAFE = CARAFEPack(self.out_channels, scale_factor=2)
-          
+        # if self.first_time:
+        #     self.p6_upsample_CARAFE = CARAFEPack(channels=self.in_channels[-1], scale_factor=2)
+        #     self.p5_upsample_CARAFE = CARAFEPack(channels=self.in_channels[-2], scale_factor=2)
+        #     self.p4_upsample_CARAFE = CARAFEPack(channels=self.in_channels[-3], scale_factor=2)
+        #     self.p3_upsample_CARAFE = CARAFEPack(channels=self.in_channels[-4], scale_factor=2)  
+        # else:
+        self.upsample_cfg=dict(type='carafe', up_kernel=5, up_group=1, encoder_kernel=3, encoder_dilation=1)
+        self.upsample_cfg.update(channels=self.out_channels, scale_factor=2)
+        self.p6_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        self.p5_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        self.p4_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        self.p3_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        self.p6_upsample_CARAFE.init_weights()  
+        self.p5_upsample_CARAFE.init_weights()  
+        self.p4_upsample_CARAFE.init_weights()  
+        self.p3_upsample_CARAFE.init_weights()  
         # bottom to up: feature map down_sample module
         self.p4_down_sample = MaxPool2dSamePadding(3, 2)
         self.p5_down_sample = MaxPool2dSamePadding(3, 2)
@@ -225,6 +231,12 @@ class BiFPNStage(nn.Module):
                 p6_in = self.p5_to_p6(p5)
                 # build feature map P7
                 p7_in = self.p6_to_p7(p6_in)
+                # print("first p3: ", p3.shape)
+                # print("first p4: ", p4.shape) 
+                # print("first p5: ", p5.shape)   
+                # print("first p6: ", p6.shape)
+                # print("first p6_in: ", p6_in.shape)
+                # print("first p7_in: ", p7_in.shape)
             elif self.in_channels_len == 4:
                 p3, p4, p5, p6 = x
                 # build feature map P6
@@ -251,7 +263,10 @@ class BiFPNStage(nn.Module):
         weight = p6_w1 / (torch.sum(p6_w1, dim=0) + self.epsilon)
         # Connections for P6_0 and P7_0 to P6_1 respectively
         # print(p6_in.shape)
-        # print(p7_in.shape)
+        print(p6_in.shape)
+        print(p7_in.shape)
+        print(self.first_time)
+        print(self.p6_upsample_CARAFE)
         # print(self.p6_upsample(p7_in).shape)
         p6_up = self.conv6_up(
             self.combine(weight[0] * p6_in +
