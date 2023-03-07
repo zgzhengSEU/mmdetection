@@ -6,9 +6,11 @@ _base_ = [
 
 
 # ======================== wandb & run =========================================================================================
-TAGS = ["casc_r50_fpn_20e","DH", "GA0010", "bifpn"]
+
+# ===========================================
+TAGS = ["casc_r50_fpn_20e"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_bifpn_20e_DH_GA0010"
+ALGO_NAME = "cascade-rcnn_r50_bifpncarafe_20e"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -31,9 +33,9 @@ load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascad
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 1
+train_batch_size_per_gpu = 2
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 1
+train_num_workers = 2
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
@@ -47,8 +49,10 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
-# =============== model ========================================================================================================
+# =============== model ============================================================================================================
+# norm_cfg = dict(type='BN', requires_grad=True, eps=1e-3, momentum=0.01)
 model = dict(
+    data_preprocessor=dict(pad_size_divisor=64),
     backbone=dict(
         plugins=[
             dict(
@@ -64,19 +68,29 @@ model = dict(
         dcn=dict(type='DCN', deform_groups=1, fallback_on_stride=False),
         stage_with_dcn=(False, True, True, True)),
     neck=dict(
-        _delete_=True,
-        type='BiFPN',
-        num_stages=6,
+        type='FPN_CARAFE',
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
-        start_level=0),
+        num_outs=5,
+        start_level=0,
+        end_level=-1,
+        norm_cfg=None,
+        act_cfg=None,
+        order=('conv', 'norm', 'act'),
+        upsample_cfg=dict(
+            type='carafe',
+            up_kernel=5,
+            up_group=1,
+            encoder_kernel=3,
+            encoder_dilation=1,
+            compressed_channels=64)),
     roi_head=dict(
         type='CascadeDoubleHeadRoIHead',
-        reg_roi_scale_factor=1.3,
+        reg_roi_scale_factor=1.3,    
         bbox_head=[
             dict(
                 type='DoubleConvFCBBoxHead',
-                num_convs=4,
+                num_convs=5,
                 num_fcs=2,
                 in_channels=256,
                 conv_out_channels=1024,
@@ -87,13 +101,15 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False, #
+                reg_decoded_bbox=True, # GIOULoss
+                norm_cfg=dict(type='SyncBN', requires_grad=True),
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
-                num_convs=4,
+                num_convs=5,
                 num_fcs=2,
                 in_channels=256,
                 conv_out_channels=1024,
@@ -104,13 +120,15 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True,
+                norm_cfg=dict(type='SyncBN', requires_grad=True),
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
-                num_convs=4,
+                num_convs=5,
                 num_fcs=2,
                 in_channels=256,
                 conv_out_channels=1024,
@@ -121,12 +139,13 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True,
+                norm_cfg=dict(type='SyncBN', requires_grad=True),
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))]))
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0))
+    ]))
+   
 
-# ===================== optimizer ======================================================================================================
-# optim_wrapper = dict(
-#     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
-#     paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
+
