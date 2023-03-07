@@ -1,6 +1,6 @@
 _base_ = [
-    '../../../configs/_base_/models/cascade-rcnn_r50_fpn.py',
-    '../../../configs/common/lsj-200e_coco-detection.py'
+    '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
+    '../../../configs/common/visdrone-lsj-200e_coco-detection.py'
 ]
 image_size = (1024, 1024)
 batch_augments = [dict(type='BatchFixedSizePad', size=image_size)]

@@ -23,7 +23,7 @@ Wandb_init_kwargs = dict(
     allow_val_change=True
 )
 visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
-
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend')])
 # ==========================================
 import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
