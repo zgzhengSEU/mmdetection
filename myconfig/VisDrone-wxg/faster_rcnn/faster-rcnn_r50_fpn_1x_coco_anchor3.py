@@ -1,16 +1,16 @@
 _base_ = [
-    '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
+    '../../../configs/_base_/models/faster-rcnn_r50_fpn.py',
     '../../../configs/_base_/datasets/visdrone_detection.py',
     '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
 # ======================== wandb & run =========================================================================================
-
+fp16 = dict(loss_scale=512.)
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x"]
-GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x"
+TAGS = ["r50_fpn_1x"]
+GROUP_NAME = "faster-rcnn"
+ALGO_NAME = "faster-rcnn_r50_fpn_1x_coco_anchor3"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -29,7 +29,7 @@ import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
-load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
+load_from = "https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
@@ -49,8 +49,10 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
-# model = dict(
-#     rpn_head=dict(
-#         anchor_generator=dict(
-#             scales=[4],
-#             ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
+model = dict(
+    rpn_head=dict(
+        anchor_generator=dict(
+            scales=[4],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])),
+    roi_head=dict(
+        bbox_head=dict(num_classes=10)))
