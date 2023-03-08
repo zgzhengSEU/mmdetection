@@ -1,16 +1,16 @@
 _base_ = [
-    '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
+    '../../../configs/_base_/models/faster-rcnn_r50_fpn.py',
     '../../../configs/_base_/datasets/visdrone_detection.py',
     '../../../configs/_base_/schedules/schedule_2x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
 
 # ======================== wandb & run =========================================================================================
-# bsub -J cascade-rcnn_r101_bifpn_2x -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_bifpn_2x.py"
+# bsub -J dh-faster-rcnn_r50_fpn_2x -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/dh-faster-rcnn_r50_fpn_2x.py"
 # ===========================================
-TAGS = ["r101", "2x","bifpn"]
+TAGS = ["r50", "2x", "DH"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r101_bifpn_2x"
+ALGO_NAME = "dh-faster-rcnn_r50_fpn_2x"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -29,7 +29,7 @@ import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
-load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_20e_coco/cascade_rcnn_r101_fpn_20e_coco_bbox_mAP-0.425_20200504_231812-5057dcc5.pth"
+load_from = "https://download.openmmlab.com/mmdetection/v2.0/double_heads/dh_faster_rcnn_r50_fpn_1x_coco/dh_faster_rcnn_r50_fpn_1x_coco_20200130-586b67df.pth"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
@@ -49,15 +49,26 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
+
 model = dict(
-    backbone=dict(
-        depth=101,
-        init_cfg=dict(type='Pretrained',
-                      checkpoint='torchvision://resnet101')),
-    neck=dict(
-        _delete_=True,
-        type='BiFPN',
-        num_stages=6,
-        in_channels=[256, 512, 1024, 2048],
-        out_channels=256,
-        start_level=0))
+    roi_head=dict(
+        type='DoubleHeadRoIHead',
+        reg_roi_scale_factor=1.3,
+        bbox_head=dict(
+            _delete_=True,
+            type='DoubleConvFCBBoxHead',
+            num_convs=4,
+            num_fcs=2,
+            in_channels=256,
+            conv_out_channels=1024,
+            fc_out_channels=1024,
+            roi_feat_size=7,
+            num_classes=10,
+            bbox_coder=dict(
+                type='DeltaXYWHBBoxCoder',
+                target_means=[0., 0., 0., 0.],
+                target_stds=[0.1, 0.1, 0.2, 0.2]),
+            reg_class_agnostic=False,
+            loss_cls=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))))

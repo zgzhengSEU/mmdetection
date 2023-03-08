@@ -34,9 +34,9 @@ load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascad
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 4
+train_batch_size_per_gpu = 2
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 4
+train_num_workers = 2
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
