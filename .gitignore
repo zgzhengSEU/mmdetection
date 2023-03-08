@@ -56,8 +56,6 @@ coverage.xml
 local_settings.py
 db.sqlite3
 
-# Flask stuff:
-instance/
 .webassets-cache
 
 # Scrapy stuff:
@@ -116,7 +114,7 @@ data
 docs/modelzoo_statistics.md
 mmdet/.mim
 work_dirs/
-
+wandb
 # Pytorch
 *.pth
 *.py~
