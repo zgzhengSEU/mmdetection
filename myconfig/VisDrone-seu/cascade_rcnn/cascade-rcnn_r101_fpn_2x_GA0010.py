@@ -18,6 +18,7 @@ Wandb_init_kwargs = dict(
     group=GROUP_NAME,
     name=ALGO_NAME,
     tags=TAGS,
+    mode="offline",
     resume="allow",
     # id="", 
     allow_val_change=True

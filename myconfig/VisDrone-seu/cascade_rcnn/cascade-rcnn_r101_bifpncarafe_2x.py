@@ -19,6 +19,7 @@ Wandb_init_kwargs = dict(
     name=ALGO_NAME,
     tags=TAGS,
     resume="allow",
+    mode="offline",
     # id="", 
     allow_val_change=True
 )
