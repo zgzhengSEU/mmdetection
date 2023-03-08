@@ -6,7 +6,7 @@ _base_ = [
 
 
 # ======================== wandb & run =========================================================================================
-# bsub -J dh-faster-rcnn_r50_fpn_2x -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/dh-faster-rcnn_r50_fpn_2x.py"
+# bsub -J dh-faster-rcnn_r50_fpn_2x -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd ~/mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/dh-faster-rcnn_r50_fpn_2x.py"
 # ===========================================
 TAGS = ["r50", "2x", "DH"]
 GROUP_NAME = "cascade-rcnn"

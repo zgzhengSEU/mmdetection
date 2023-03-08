@@ -6,7 +6,7 @@ _base_ = [
 
 
 # ======================== wandb & run =========================================================================================
-# bsub -J cascade-rcnn_r101_fpn_2x_smallanchor -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_fpn_2x_smallanchor.py"
+# bsub -J cascade-rcnn_r101_fpn_2x_smallanchor -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd ~/mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_fpn_2x_smallanchor.py"
 # ===========================================
 TAGS = ["r101", "2x", "smallanchor"]
 GROUP_NAME = "cascade-rcnn"

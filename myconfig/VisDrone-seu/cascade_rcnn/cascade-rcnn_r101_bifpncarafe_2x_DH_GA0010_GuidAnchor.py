@@ -6,7 +6,7 @@ _base_ = [
 
 
 # ======================== wandb & run =========================================================================================
-# bsub -J cascade-rcnn_r101_bifpncarafe_2x_DH_GA0010_GuidAnchor -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_bifpncarafe_2x_DH_GA0010_GuidAnchor.py"
+# bsub -J cascade-rcnn_r101_bifpncarafe_2x_DH_GA0010_GuidAnchor -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd ~/mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_bifpncarafe_2x_DH_GA0010_GuidAnchor.py"
 # ===========================================
 TAGS = ["r101", "2x", "bifpncarafe", "DH", "GA0010", "GuidAnchor"]
 GROUP_NAME = "cascade-rcnn"
