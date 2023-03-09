@@ -671,12 +671,11 @@ class GuidedAnchorHead(AnchorHead):
     def loss_loc_single(self, loc_pred: Tensor, loc_target: Tensor,
                         loc_weight: Tensor, avg_factor: float) -> Tensor:
         """Compute location loss in single level."""
-        with torch.cuda.amp.autocast(enabled=False):
-            loss_loc = self.loss_loc(
-                loc_pred.reshape(-1, 1),
-                loc_target.reshape(-1).long(),
-                loc_weight.reshape(-1),
-                avg_factor=avg_factor)
+        loss_loc = self.loss_loc(
+            loc_pred.reshape(-1, 1),
+            loc_target.reshape(-1).long(),
+            loc_weight.reshape(-1),
+            avg_factor=avg_factor)
         return loss_loc
 
     def loss_by_feat(
