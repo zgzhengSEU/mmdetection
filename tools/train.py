@@ -89,7 +89,8 @@ def main():
             cfg.optim_wrapper.type = 'AmpOptimWrapper'
             cfg.optim_wrapper.loss_scale = 'dynamic'
             print_log('AMP training is enabled')
-
+    else:
+        print_log('AMP training is disabled')
     # enable automatically scaling LR
     if args.auto_scale_lr:
         if 'auto_scale_lr' in cfg:

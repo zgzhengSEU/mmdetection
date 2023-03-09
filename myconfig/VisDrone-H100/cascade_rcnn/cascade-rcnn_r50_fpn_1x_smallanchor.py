@@ -8,9 +8,9 @@ _base_ = [
 
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", "smallanchors3"]
+TAGS = ["casc_r50_fpn_1x", "small4anchors3"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_smallanchor3"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_small4anchor3"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -52,5 +52,5 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 model = dict(
     rpn_head=dict(
         anchor_generator=dict(
-            scales=[2],
+            scales=[4],
             ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
