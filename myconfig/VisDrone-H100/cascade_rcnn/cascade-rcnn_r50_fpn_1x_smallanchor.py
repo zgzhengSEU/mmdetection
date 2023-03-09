@@ -49,8 +49,8 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
-# model = dict(
-#     rpn_head=dict(
-#         anchor_generator=dict(
-#             scales=[4],
-#             ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
+model = dict(
+    rpn_head=dict(
+        anchor_generator=dict(
+            scales=[2],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
