@@ -8,9 +8,9 @@ _base_ = [
 
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x"]
+TAGS = ["casc_r50_fpn_1x", "smallanchors3"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_smallanchor3"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
