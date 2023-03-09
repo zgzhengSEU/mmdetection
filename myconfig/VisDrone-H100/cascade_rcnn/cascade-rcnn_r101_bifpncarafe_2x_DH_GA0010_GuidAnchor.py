@@ -10,7 +10,7 @@ _base_ = [
 # ===========================================
 TAGS = ["r101", "2x", "bifpncarafe", "DH", "GA0010", "GuidAnchor"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r101_bifpncarafe_2x_DH_GA0010_GuidAnchor"
+ALGO_NAME = "cascade-rcnn_r101_bifpncarafe_2x_DH_GA0010_GuidAnchor_8"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -33,9 +33,9 @@ load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascad
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 2 # 4->18G  8->24G 16->26G
+train_batch_size_per_gpu = 16 # 4->18G  8->24G 16->26G
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 2
+train_num_workers = 8
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
@@ -82,14 +82,14 @@ model = dict(
         feat_channels=256,
         approx_anchor_generator=dict(
             type='AnchorGenerator',
-            octave_base_scale=8,
+            octave_base_scale=2,
             scales_per_octave=3,
             ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
         square_anchor_generator=dict(
             type='AnchorGenerator',
             ratios=[1.0],
-            scales=[8],
+            scales=[2],
             strides=[4, 8, 16, 32, 64]),
         anchor_coder=dict(
             type='DeltaXYWHBBoxCoder',
@@ -269,3 +269,4 @@ model = dict(
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100)))
 optim_wrapper = dict(clip_grad=dict(max_norm=35, norm_type=2))
+fp16 = dict(loss_scale=512.)

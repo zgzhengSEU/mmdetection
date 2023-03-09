@@ -22,7 +22,7 @@ Wandb_init_kwargs = dict(
     # id="", 
     allow_val_change=True
 )
-visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 import datetime as dt
@@ -33,9 +33,9 @@ load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascad
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 2 # 4->18G  8->24G 16->26G
+train_batch_size_per_gpu = 8 # 4->18G  8->24G 16->26G
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 2
+train_num_workers = 8
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
