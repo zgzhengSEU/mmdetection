@@ -19,8 +19,9 @@ from .yolo_neck import YOLOV3Neck
 from .yolox_pafpn import YOLOXPAFPN
 from .bifpn import BiFPN
 from .bifpn_carafe import BiFPNCarafe
+from .bifpn_carafe_noweight import BiFPNCarafeNoweight
 __all__ = [
     'FPN', 'BFP', 'ChannelMapper', 'HRFPN', 'NASFPN', 'FPN_CARAFE', 'PAFPN',
     'NASFCOS_FPN', 'RFP', 'YOLOV3Neck', 'FPG', 'DilatedEncoder',
-    'CTResNetNeck', 'SSDNeck', 'YOLOXPAFPN', 'DyHead', 'CSPNeXtPAFPN', 'SSH', 'BiFPN', 'BiFPNCarafe'
+    'CTResNetNeck', 'SSDNeck', 'YOLOXPAFPN', 'DyHead', 'CSPNeXtPAFPN', 'SSH', 'BiFPN', 'BiFPNCarafe', 'BiFPNCarafeNoweight'
 ]

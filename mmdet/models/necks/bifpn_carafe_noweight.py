@@ -332,7 +332,7 @@ class BiFPNStage(nn.Module):
 
 
 @MODELS.register_module()
-class BiFPNCarafe(BaseModule):
+class BiFPNCarafeNoweight(BaseModule):
     '''
         num_stages: int, bifpn number of repeats
         in_channels: List[int], input dim for P3, P4, P5
