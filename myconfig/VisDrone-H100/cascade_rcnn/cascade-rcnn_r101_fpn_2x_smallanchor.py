@@ -8,7 +8,7 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 # bsub -J cascade-rcnn_r101_fpn_2x_smallanchor -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_fpn_2x_smallanchor.py"
 # ===========================================
-TAGS = ["r101", "2x", "smallanchor"]
+TAGS = ["r101", "2x", "small4anchor3"]
 GROUP_NAME = "cascade-rcnn"
 ALGO_NAME = "cascade-rcnn_r101_fpn_2x_smallanchor"
 DATASET_NAME = "VisDrone"
@@ -29,13 +29,13 @@ import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
-load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_20e_coco/cascade_rcnn_r101_fpn_20e_coco_bbox_mAP-0.425_20200504_231812-5057dcc5.pth"
+# load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_20e_coco/cascade_rcnn_r101_fpn_20e_coco_bbox_mAP-0.425_20200504_231812-5057dcc5.pth"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 2 # 4->18G  8->24G 16->26G
+train_batch_size_per_gpu = 16 # 4->18G  8->24G 16->26G
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 2
+train_num_workers = 8
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
@@ -56,6 +56,17 @@ model = dict(
                       checkpoint='torchvision://resnet101')),
     rpn_head=dict(
         anchor_generator=dict(
-            scales=[2],
+            scales=[4],
             ratios=[0.333, 0.5, 1.0, 2.0, 3.0]))
     )
+
+""""
+==============================
+Use size divisor set input shape from (1080, 1920) to (768, 1344)
+==============================
+Compute type: dataloader: load a picture from the dataset
+Input shape: (768, 1344)
+Flops: 0.313T
+Params: 88.174M
+==============================
+"""

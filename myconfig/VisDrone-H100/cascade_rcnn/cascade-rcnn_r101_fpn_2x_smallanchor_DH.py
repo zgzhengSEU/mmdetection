@@ -29,13 +29,13 @@ import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
-load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_20e_coco/cascade_rcnn_r101_fpn_20e_coco_bbox_mAP-0.425_20200504_231812-5057dcc5.pth"
+# load_from = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_20e_coco/cascade_rcnn_r101_fpn_20e_coco_bbox_mAP-0.425_20200504_231812-5057dcc5.pth"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 2 # 4->24G  8->24G 16->26G
+train_batch_size_per_gpu = 16 # 4->24G  8->24G 16->26G
 # Worker to pre-fetch data for each single GPU during training
-train_num_workers = 2
+train_num_workers = 8
 # Batch size of a single GPU during valing
 val_batch_size_per_gpu = 1
 # Worker to pre-fetch data for each single GPU during valing
@@ -54,6 +54,10 @@ model = dict(
         depth=101,
         init_cfg=dict(type='Pretrained',
                       checkpoint='torchvision://resnet101')),
+    rpn_head=dict(
+        anchor_generator=dict(
+            scales=[4],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])),
     roi_head=dict(
         type='CascadeDoubleHeadRoIHead',
         reg_roi_scale_factor=1.3,
@@ -112,3 +116,15 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
                 loss_bbox=dict(type='GIoULoss', loss_weight=10.0))]))
+
+
+"""
+==============================
+Use size divisor set input shape from (1080, 1920) to (768, 1344)
+==============================
+Compute type: dataloader: load a picture from the dataset
+Input shape: (768, 1344)
+Flops: 1.134T
+Params: 0.105G
+==============================
+"""
