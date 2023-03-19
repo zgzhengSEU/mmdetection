@@ -10,7 +10,7 @@ _base_ = [
 # ===========================================
 TAGS = ["r101", "DH", "2x"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r101_fpn_2x_smallanchor_DH"
+ALGO_NAME = "cascade-rcnn_r101_fpn_2x_smallanchor_DHGIoU_clipgrad"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -24,6 +24,7 @@ Wandb_init_kwargs = dict(
 )
 visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
+randomness = dict(seed = 571004651)
 # ==========================================
 import datetime as dt
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -33,7 +34,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 16 # 4->24G  8->24G 16->26G
+train_batch_size_per_gpu = 8 # 4->24G  8->24G 16->26G
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -75,10 +76,11 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True, # GIOULoss
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4,
@@ -92,10 +94,11 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4,
@@ -109,11 +112,13 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))]))
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0))]))
 
+# optim_wrapper = dict(clip_grad=dict(max_norm=50, norm_type=2))
 
 """
 ==============================

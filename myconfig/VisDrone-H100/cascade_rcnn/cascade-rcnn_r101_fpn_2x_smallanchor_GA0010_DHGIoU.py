@@ -6,11 +6,11 @@ _base_ = [
 
 
 # ======================== wandb & run =========================================================================================
-# bsub -J cascade-rcnn_r101_fpn_2x_DH -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_fpn_2x_DH.py"
+# bsub -J cascade-rcnn_r101_fpn_2x_GA0010 -q gpu_v100 -gpu "num=1:mode=exclusive_process:aff=yes" "module load anaconda3;module load cuda-11.6;module load gcc-9.3.0;source activate mmdet3;cd mmdet3;python3 tools/train.py myconfig/VisDrone-seu/cascade_rcnn/cascade-rcnn_r101_fpn_2x_GA0010.py"
 # ===========================================
-TAGS = ["r101", "DH", "2x"]
+TAGS = ["r101", "GA0010", "2x", "DH"]
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r101_fpn_2x_smallanchor_DH"
+ALGO_NAME = "cascade-rcnn_r101_fpn_2x_smallanchor_GA0010_DHGIoU"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -33,7 +33,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 16 # 4->24G  8->24G 16->26G
+train_batch_size_per_gpu = 16 # 4->18G  8->24G 16->26G
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -51,6 +51,19 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 
 model = dict(
     backbone=dict(
+        plugins=[
+            dict(
+                cfg=dict(
+                    type='GeneralizedAttention',
+                    spatial_range=-1,
+                    num_heads=8,
+                    attention_type='0010',
+                    kv_stride=2),
+                stages=(False, False, True, True),
+                position='after_conv2')
+        ],
+        dcn=dict(type='DCN', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, True, True, True),
         depth=101,
         init_cfg=dict(type='Pretrained',
                       checkpoint='torchvision://resnet101')),
@@ -75,10 +88,11 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True, # GIOULoss
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4,
@@ -92,10 +106,11 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4,
@@ -109,10 +124,12 @@ model = dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
-                reg_class_agnostic=True,
+                reg_class_agnostic=False,
+                reg_decoded_bbox=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=2.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=2.0))]))
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0))]))
+
 
 
 """
@@ -121,7 +138,7 @@ Use size divisor set input shape from (1080, 1920) to (768, 1344)
 ==============================
 Compute type: dataloader: load a picture from the dataset
 Input shape: (768, 1344)
-Flops: 1.134T
-Params: 0.105G
-==============================
+Flops: 0.25T
+Params: 96.357M
+==============================  
 """
