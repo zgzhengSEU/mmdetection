@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument(
         '--amp',
         action='store_true',
-        default=True,
+        default=False,
         help='enable automatic-mixed-precision training')
     parser.add_argument(
         '--auto-scale-lr',
@@ -89,9 +89,17 @@ def main():
             cfg.optim_wrapper.type = 'AmpOptimWrapper'
             cfg.optim_wrapper.loss_scale = 'dynamic'
             print_log('AMP training is enabled')
-
+    else:
+        print_log('AMP training is disabled')
     # enable automatically scaling LR
     if args.auto_scale_lr:
+        if 'auto_scale_lr' in cfg:
+            print('auto_scale_lr in cfg')
+            if 'enable' in cfg.auto_scale_lr:
+                print('enable in cfg.auto_scale_lr')
+                if 'base_batch_size' in cfg.auto_scale_lr:
+                    print('base_batch_size in cfg.auto_scale_lr')
+        
         if 'auto_scale_lr' in cfg and \
                 'enable' in cfg.auto_scale_lr and \
                 'base_batch_size' in cfg.auto_scale_lr:

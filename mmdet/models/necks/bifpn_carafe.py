@@ -118,16 +118,17 @@ class BiFPNStage(nn.Module):
         #     self.p4_upsample_CARAFE = CARAFEPack(channels=self.in_channels[-3], scale_factor=2)
         #     self.p3_upsample_CARAFE = CARAFEPack(channels=self.in_channels[-4], scale_factor=2)  
         # else:
-        self.upsample_cfg=dict(type='carafe', up_kernel=5, up_group=1, encoder_kernel=3, encoder_dilation=1)
-        self.upsample_cfg.update(channels=self.out_channels, scale_factor=2)
-        self.p6_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
-        self.p5_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
-        self.p4_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
-        self.p3_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
-        self.p6_upsample_CARAFE.init_weights()  
-        self.p5_upsample_CARAFE.init_weights()  
-        self.p4_upsample_CARAFE.init_weights()  
-        self.p3_upsample_CARAFE.init_weights()  
+        # self.upsample_cfg=dict(type='carafe', up_kernel=5, up_group=1, encoder_kernel=3, encoder_dilation=1)
+        # self.upsample_cfg.update(channels=self.out_channels, scale_factor=2)
+        # self.p6_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        # self.p5_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        # self.p4_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        # self.p3_upsample_CARAFE = build_upsample_layer(self.upsample_cfg)
+        self.p6_upsample_CARAFE = CARAFEPack(channels=self.out_channels, scale_factor=2)
+        self.p5_upsample_CARAFE = CARAFEPack(channels=self.out_channels, scale_factor=2)
+        self.p4_upsample_CARAFE = CARAFEPack(channels=self.out_channels, scale_factor=2)
+        self.p3_upsample_CARAFE = CARAFEPack(channels=self.out_channels, scale_factor=2)
+
         # bottom to up: feature map down_sample module
         self.p4_down_sample = MaxPool2dSamePadding(3, 2)
         self.p5_down_sample = MaxPool2dSamePadding(3, 2)
@@ -263,10 +264,10 @@ class BiFPNStage(nn.Module):
         weight = p6_w1 / (torch.sum(p6_w1, dim=0) + self.epsilon)
         # Connections for P6_0 and P7_0 to P6_1 respectively
         # print(p6_in.shape)
-        print(p6_in.shape)
-        print(p7_in.shape)
-        print(self.first_time)
-        print(self.p6_upsample_CARAFE)
+        # print(p6_in.shape)
+        # print(p7_in.shape)
+        # print(self.first_time)
+        # print(self.p6_upsample_CARAFE)
         # print(self.p6_upsample(p7_in).shape)
         p6_up = self.conv6_up(
             self.combine(weight[0] * p6_in +
