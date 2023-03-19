@@ -149,6 +149,10 @@ class CascadeDoubleHeadRoIHead(BaseRoIHead):
             rois,
             roi_scale_factor=self.reg_roi_scale_factor)
         # do not support caffe_c4 model anymore
+        if self.with_shared_head:
+            bbox_cls_feats = self.shared_head(bbox_cls_feats)
+            bbox_reg_feats = self.shared_head(bbox_reg_feats)        
+
         cls_score, bbox_pred = bbox_head(bbox_cls_feats, bbox_reg_feats)
 
         bbox_results = dict(
