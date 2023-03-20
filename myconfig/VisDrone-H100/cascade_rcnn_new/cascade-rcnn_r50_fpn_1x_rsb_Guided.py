@@ -54,21 +54,40 @@ model = dict(
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
     rpn_head=dict(
-        type='RPNHead',
+        _delete_=True,
+        type='GARPNHead',
         in_channels=256,
         feat_channels=256,
-        anchor_generator=dict(
+        approx_anchor_generator=dict(
             type='AnchorGenerator',
-            scales=[8],
+            octave_base_scale=8,
+            scales_per_octave=3,
             ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
+        square_anchor_generator=dict(
+            type='AnchorGenerator',
+            ratios=[1.0],
+            scales=[8],
+            strides=[4, 8, 16, 32, 64]),
+        anchor_coder=dict(
+            type='DeltaXYWHBBoxCoder',
+            target_means=[.0, .0, .0, .0],
+            target_stds=[0.07, 0.07, 0.14, 0.14]),
         bbox_coder=dict(
             type='DeltaXYWHBBoxCoder',
             target_means=[.0, .0, .0, .0],
-            target_stds=[1.0, 1.0, 1.0, 1.0]),
+            target_stds=[0.07, 0.07, 0.11, 0.11]),
+        loc_filter_thr=0.01,
+        loss_loc=dict(
+            type='FocalLoss',
+            use_sigmoid=True,
+            gamma=2.0,
+            alpha=0.25,
+            loss_weight=1.0),
+        loss_shape=dict(type='BoundedIoULoss', beta=0.2, loss_weight=1.0),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+        loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
     roi_head=dict(
         type='CascadeRoIHead',
         num_stages=3,
