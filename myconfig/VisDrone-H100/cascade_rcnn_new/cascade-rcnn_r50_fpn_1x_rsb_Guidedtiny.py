@@ -9,7 +9,7 @@ _base_ = [
 # ===========================================
 TAGS = ["casc_r50_fpn_1x", 'rsb', 'Guided']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_Guided"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_Guidedtiny"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -21,7 +21,7 @@ Wandb_init_kwargs = dict(
     # id="",
     allow_val_change=True
 )
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 import datetime as dt
@@ -30,7 +30,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 8
+train_batch_size_per_gpu = 16
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -60,14 +60,14 @@ model = dict(
         feat_channels=256,
         approx_anchor_generator=dict(
             type='AnchorGenerator',
-            octave_base_scale=8,
+            octave_base_scale=4,
             scales_per_octave=3,
-            ratios=[0.5, 1.0, 2.0],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0],
             strides=[4, 8, 16, 32, 64]),
         square_anchor_generator=dict(
             type='AnchorGenerator',
             ratios=[1.0],
-            scales=[8],
+            scales=[4],
             strides=[4, 8, 16, 32, 64]),
         anchor_coder=dict(
             type='DeltaXYWHBBoxCoder',
@@ -186,7 +186,7 @@ model = dict(
         rpn_proposal=dict(
             nms_pre=2000,
             max_per_img=300, #change
-            nms_post=1000, # new
+            num_post=1000, # new
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=[
@@ -243,7 +243,7 @@ model = dict(
         rpn=dict(
             nms_pre=1000,
             max_per_img=300, # change
-            nms_post=1000, # new
+            num_post=1000, # new
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=dict(

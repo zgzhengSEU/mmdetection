@@ -4,12 +4,13 @@ _base_ = [
     '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
+
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb', 'DH']
+TAGS = ["casc_r50_fpn_1x", 'rsb', 'GA_DCNv2', 'DH', 'tinyanchor']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_DH"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_GA_DCNv2_DH"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -46,14 +47,29 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
-# ==================================================================================================================================================
-
 
 checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
 model = dict(
     backbone=dict(
+        plugins=[
+            dict(
+                cfg=dict(
+                    type='GeneralizedAttention',
+                    spatial_range=-1,
+                    num_heads=8,
+                    attention_type='0010',
+                    kv_stride=2),
+                stages=(False, False, True, True),
+                position='after_conv2')
+        ],
+        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, True, True, True),
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
+    rpn_head=dict(
+        anchor_generator=dict(
+            scales=[4],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])),
     roi_head=dict(
         type='CascadeDoubleHeadRoIHead', # new
         reg_roi_scale_factor=1.3, # new
@@ -131,5 +147,6 @@ model = dict(
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
     paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
+
 
 

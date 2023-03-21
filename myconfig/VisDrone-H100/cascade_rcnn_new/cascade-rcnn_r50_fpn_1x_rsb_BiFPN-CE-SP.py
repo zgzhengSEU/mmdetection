@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb', 'dyhead']
+TAGS = ["casc_r50_fpn_1x", 'rsb', 'BiFPN']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_dyhead_bs8"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_BiFPN-CE-SP"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -17,11 +17,12 @@ Wandb_init_kwargs = dict(
     group=GROUP_NAME,
     name=ALGO_NAME,
     tags=TAGS,
+    mode='offline',
     resume="allow",
     # id="",
     allow_val_change=True
 )
-visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 import datetime as dt
@@ -30,7 +31,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 8
+train_batch_size_per_gpu = 16
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -51,20 +52,22 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 
 checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
 model = dict(
+    data_preprocessor=dict(pad_size_divisor=64),
     backbone=dict(
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-    neck=[
-        dict(
-            type='FPN',
+        neck=dict(
+            _delete_=True,
+            type='BiFPN',
+            num_stages=3,
             in_channels=[256, 512, 1024, 2048],
             out_channels=256,
-            num_outs=5),
-        dict(type='DyHead', in_channels=256, out_channels=256, num_blocks=6)
-    ])
-
-
-
+            start_level=0,
+            use_carafe=True,
+            use_softpool=True,
+            use_skipdown=False,
+            use_noweight=False,
+            norm_cfg=dict(type='BN', requires_grad=True)))
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
     paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))

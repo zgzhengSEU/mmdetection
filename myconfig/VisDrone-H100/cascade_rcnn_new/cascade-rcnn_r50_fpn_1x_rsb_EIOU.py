@@ -22,8 +22,7 @@ Wandb_init_kwargs = dict(
     # id="",
     allow_val_change=True
 )
-visualizer = dict(vis_backends=[dict(type='LocalVisBackend'), dict(
-    type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+visualizer = dict(vis_backends=[dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -58,9 +57,6 @@ model = dict(
     backbone=dict(
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-    rpn_head=dict(
-        # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
-        loss_bbox=dict(type='EIoULoss',  loss_weight=1.0, smooth_point=0.1)),
     roi_head=dict(
         bbox_head=[
             dict(
@@ -68,7 +64,7 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=80,
+                num_classes=10,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -79,13 +75,14 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 # loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
-                loss_bbox=dict(type='EIoULoss',  loss_weight=1.0, smooth_point=0.1)),
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='EIoULoss',  loss_weight=10, smooth_point=0.1)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=80,
+                num_classes=10,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -96,13 +93,14 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 # loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
-                loss_bbox=dict(type='EIoULoss',  loss_weight=1.0, smooth_point=0.1)),
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='EIoULoss',  loss_weight=10, smooth_point=0.1)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=80,
+                num_classes=10,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -113,7 +111,8 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 # loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
-                loss_bbox=dict(type='EIoULoss',  loss_weight=1.0, smooth_point=0.1))
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='EIoULoss',  loss_weight=10, smooth_point=0.1))
         ]))
 
 optim_wrapper = dict(

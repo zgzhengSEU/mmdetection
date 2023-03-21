@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb', 'DH']
+TAGS = ["casc_r50_fpn_1x", 'rsb', 'GIOU']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_DH"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_GIOU"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -55,78 +55,62 @@ model = dict(
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
     roi_head=dict(
-        type='CascadeDoubleHeadRoIHead', # new
-        reg_roi_scale_factor=1.3, # new
-        num_stages=3,
-        stage_loss_weights=[1, 0.5, 0.25],
-        bbox_roi_extractor=dict(
-            type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
-            out_channels=256,
-            featmap_strides=[4, 8, 16, 32]),
         bbox_head=[
             dict(
-                type='DoubleConvFCBBoxHead',
-                num_convs=4, # new
-                num_fcs=2, # new
-                conv_out_channels=1024, # new
-                fc_out_channels=1024,
+                type='Shared2FCBBoxHead',
                 in_channels=256,
+                fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
-                reg_class_agnostic=False, # change
+                reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0)),
+                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
-                type='DoubleConvFCBBoxHead',
-                num_convs=4, # new
-                num_fcs=2, # new
-                conv_out_channels=1024, # new
-                fc_out_channels=1024,
+                type='Shared2FCBBoxHead',
                 in_channels=256,
+                fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
-                reg_class_agnostic=False, # change
+                reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0)),
+                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
-                type='DoubleConvFCBBoxHead',
-                num_convs=4, # new
-                num_fcs=2, # new
-                conv_out_channels=1024, # new
-                fc_out_channels=1024,
+                type='Shared2FCBBoxHead',
                 in_channels=256,
+                fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
-                reg_class_agnostic=False, # change
+                reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0))
-        ])   
-    )
+                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0))
+        ]))
 
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
