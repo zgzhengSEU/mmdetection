@@ -8,9 +8,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb', 'GA_DCNv2', 'DH', 'tinyanchor', 'PAFPN']
+TAGS = ["casc_r50_fpn_1x", 'rsb', 'smallanchor', 'PAFPN', 'GA_DCNv2', 'DH', 'EIOU']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SKIPAFPN_GA_DCNv2_DH"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SCPAFPN_GA_DCNv2_DH_EIOU"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -67,7 +67,10 @@ model = dict(
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
     neck=dict(
-        type='SKIPPAFPN_CARAFE',
+        type='ImprovedPAFPN',
+        use_type='PAFPN_CARAFE_Skip_Parallel_concat',
+        add_extra_convs='on_output',
+        concat_kernel_size=1,
         upsample_cfg=dict(
             type='carafe',
             up_kernel=5,
@@ -104,12 +107,9 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=False, # change
-                loss_cls=dict(
-                    type='CrossEntropyLoss',
-                    use_sigmoid=False,
-                    loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0)),
+                loss_cls=dict(type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='EIoULoss',  loss_weight=10, smooth_point=0.1)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4, # new
@@ -128,8 +128,8 @@ model = dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0)),
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='EIoULoss',  loss_weight=10, smooth_point=0.1)),
             dict(
                 type='DoubleConvFCBBoxHead',
                 num_convs=4, # new
@@ -148,8 +148,8 @@ model = dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0))
+                reg_decoded_bbox=True, # IOU need
+                loss_bbox=dict(type='EIoULoss',  loss_weight=10, smooth_point=0.1))
         ])   
     )
 

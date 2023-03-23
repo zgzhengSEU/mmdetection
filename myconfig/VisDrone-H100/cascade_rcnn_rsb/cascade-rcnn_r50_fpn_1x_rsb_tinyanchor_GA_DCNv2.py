@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb', 'PAFPN']
+TAGS = ["casc_r50_fpn_1x", 'rsb', 'GA_DCNv2', 'smallanchor']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_SKIPAFPN-parallel"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_GA_DCNv2"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -30,7 +30,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 1
+train_batch_size_per_gpu = 16
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -46,24 +46,30 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
-# ==================================================================================================================================================
-
+# =============================================================================================================================================
 
 checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
 model = dict(
     backbone=dict(
+        plugins=[
+            dict(
+                cfg=dict(
+                    type='GeneralizedAttention',
+                    spatial_range=-1,
+                    num_heads=8,
+                    attention_type='0010',
+                    kv_stride=2),
+                stages=(False, False, True, True),
+                position='after_conv2')
+        ],
+        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, True, True, True),
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-    neck=dict(
-        type='SKIPPAFPN_CARAFE_parallel',
-        upsample_cfg=dict(
-            type='carafe',
-            up_kernel=5,
-            up_group=1,
-            encoder_kernel=3,
-            encoder_dilation=1,
-            compressed_channels=64)
-    ))
+    rpn_head=dict(
+        anchor_generator=dict(
+            scales=[4],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
 
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),

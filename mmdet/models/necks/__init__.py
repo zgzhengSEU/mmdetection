@@ -7,7 +7,7 @@ from .dilated_encoder import DilatedEncoder
 from .dyhead import DyHead
 from .fpg import FPG
 from .fpn import FPN
-from .fpn_carafe import FPN_CARAFE, SKIPPAFPN_CARAFE, SKIPPAFPN_CARAFE_parallel
+from .fpn_carafe import FPN_CARAFE
 from .hrfpn import HRFPN
 from .nas_fpn import NASFPN
 from .nasfcos_fpn import NASFCOS_FPN
@@ -18,8 +18,9 @@ from .ssh import SSH
 from .yolo_neck import YOLOV3Neck
 from .yolox_pafpn import YOLOXPAFPN
 from .bifpn import BiFPN
+from .skippafpn import PAFPN_CARAFE_Skip_Parallel, PAFPN_CARAFE_Skip, PAFPN_CARAFE_Skip_Parallel_Old, ImprovedPAFPN
 __all__ = [
     'FPN', 'BFP', 'ChannelMapper', 'HRFPN', 'NASFPN', 'FPN_CARAFE', 'PAFPN',
     'NASFCOS_FPN', 'RFP', 'YOLOV3Neck', 'FPG', 'DilatedEncoder',
-    'CTResNetNeck', 'SSDNeck', 'YOLOXPAFPN', 'DyHead', 'CSPNeXtPAFPN', 'SSH', 'BiFPN', 'SKIPPAFPN_CARAFE', 'SKIPPAFPN_CARAFE_parallel'
+    'CTResNetNeck', 'SSDNeck', 'YOLOXPAFPN', 'DyHead', 'CSPNeXtPAFPN', 'SSH', 'BiFPN', 'PAFPN_CARAFE_Skip_Parallel', 'PAFPN_CARAFE_Skip', 'PAFPN_CARAFE_Skip_Parallel_Old', 'ImprovedPAFPN'
 ]

@@ -4,21 +4,6 @@ _base_ = [
     '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
-checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
-model = dict(
-    backbone=dict(
-        init_cfg=dict(
-            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-        rpn_head=dict(
-            anchor_generator=dict(
-                scales=[4],
-                ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
-
-optim_wrapper = dict(
-    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
-    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
-
-
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
@@ -60,3 +45,20 @@ test_num_workers = 2
 train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_num_workers)
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
+
+# ========================== model =============================================================================
+
+checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
+model = dict(
+    backbone=dict(
+        init_cfg=dict(
+            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
+        rpn_head=dict(
+            anchor_generator=dict(
+                scales=[4],
+                ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
+
+optim_wrapper = dict(
+    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
+    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
+
