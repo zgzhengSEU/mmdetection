@@ -28,6 +28,12 @@ def parse_args():
         type=str,
         help='dump predictions to a pickle file for offline evaluation')
     parser.add_argument(
+        '--json-prefix',
+        type=str,
+        help='the prefix of the output json file without perform evaluation, '
+        'which is useful when you want to format the result to a specific '
+        'format and submit it to the test server')
+    parser.add_argument(
         '--show', action='store_true', help='show prediction results')
     parser.add_argument(
         '--show-dir',
@@ -81,6 +87,15 @@ def main():
 
     if args.show or args.show_dir:
         cfg = trigger_visualization_hook(cfg, args)
+
+    # add `format_only` and `outfile_prefix` into cfg
+    if args.json_prefix is not None:
+        print(f'json output: {args.json_prefix}.json')
+        cfg_json = {
+            'test_evaluator.format_only': True,
+            'test_evaluator.outfile_prefix': args.json_prefix
+        }
+        cfg.merge_from_dict(cfg_json)
 
     if args.tta:
 
