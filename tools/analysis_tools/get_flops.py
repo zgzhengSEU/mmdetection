@@ -19,6 +19,8 @@ try:
 except ImportError:
     raise ImportError('Please upgrade mmengine >= 0.6.0')
 
+from fvcore.nn import FlopCountAnalysis
+from fvcore.nn import flop_count_table
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Get a detector flops')
@@ -104,6 +106,11 @@ def inference(args, logger):
             inputs=data['inputs'],
             show_table=False,
             show_arch=False)
+        
+
+        fvcore_flops = FlopCountAnalysis(model, data['inputs'])
+        
+
         flops = outputs['flops']
         params = outputs['params']
         result['compute_type'] = 'direct: randomly generate a picture'
@@ -131,6 +138,7 @@ def inference(args, logger):
             inputs=data['inputs'],
             show_table=False,
             show_arch=False)
+        fvcore_flops = FlopCountAnalysis(model, data['inputs'])
         flops = outputs['flops']
         params = outputs['params']
         result['compute_type'] = 'dataloader: load a picture from the dataset'
@@ -139,7 +147,7 @@ def inference(args, logger):
     params = _format_size(params)
     result['flops'] = flops
     result['params'] = params
-
+    result['fvcore_flops'] = fvcore_flops
     return result
 
 
@@ -154,6 +162,8 @@ def main():
     params = result['params']
     compute_type = result['compute_type']
 
+    print(flop_count_table(result['fvcore_flops']))
+    
     if pad_shape != ori_shape:
         print(f'{split_line}\nUse size divisor set input shape '
               f'from {ori_shape} to {pad_shape}')
@@ -163,7 +173,7 @@ def main():
     print('!!!Please be cautious if you use the results in papers. '
           'You may need to check if all ops are supported and verify '
           'that the flops computation is correct.')
-
+    
 
 if __name__ == '__main__':
     main()
