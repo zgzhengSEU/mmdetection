@@ -45,6 +45,7 @@ class PAFPN_CARAFE_Skip_Parallel(BaseModule):
                  end_level=-1,
                  norm_cfg=None,
                  act_cfg=None,
+                 add_extra_convs: Union[bool, str] = 'on_output',
                  order=('conv', 'norm', 'act'),
                  upsample_cfg=dict(type='nearest'),
                  init_cfg=None):
@@ -62,7 +63,7 @@ class PAFPN_CARAFE_Skip_Parallel(BaseModule):
         self.upsample_cfg = upsample_cfg.copy()
         self.upsample = self.upsample_cfg.get('type')
         self.relu = nn.ReLU(inplace=False)
-
+        self.add_extra_convs = add_extra_convs
         self.order = order
         assert order in [('conv', 'norm', 'act'), ('act', 'conv', 'norm')]
 
@@ -287,28 +288,50 @@ class PAFPN_CARAFE_Skip_Parallel(BaseModule):
             feat_high_small = inner_outs[i]
             downsample_feat = self.downsample_convs[i - 1](feat_low_large)
             if i == 1:
-                feat_parallel = parallel_reduce_outs[0]
-                out = self.pafpn_convs[0](self.tensor_add(self.tensor_add(
-                    downsample_feat, feat_parallel), feat_high_small))
+                feat_parallel = parallel_reduce_outs[i- 1]
+                out = self.pafpn_convs[i - 1](self.tensor_add(self.tensor_add(
+                    downsample_feat, feat_high_small), feat_parallel))
                 outs.append(out)
             elif i == 2:
-                feat_parallel = parallel_reduce_outs[1]
+                feat_parallel = parallel_reduce_outs[i - 1]
                 skip_feat_low_large = outs[-2]
-                skip_downsample_feat = self.skip_downsample_convs[0](
+                skip_downsample_feat = self.skip_downsample_convs[i - 2](
                     skip_feat_low_large)
-                out = self.pafpn_convs[1](self.tensor_add(self.tensor_add(self.tensor_add(
-                    skip_downsample_feat, downsample_feat), feat_parallel), feat_high_small))
+                out = self.pafpn_convs[i - 1](self.tensor_add(self.tensor_add(self.tensor_add(
+                    skip_downsample_feat, downsample_feat), feat_high_small), feat_parallel))
                 outs.append(out)
-            elif i == 3 or i == 4:
+            elif i == 3:
                 skip_feat_low_large = outs[-2]
-                skip_downsample_feat = self.skip_downsample_convs[0](
+                skip_downsample_feat = self.skip_downsample_convs[i - 2](
                     skip_feat_low_large)
                 out = self.pafpn_convs[i - 1](self.tensor_add(self.tensor_add(
-                    skip_downsample_feat, downsample_feat), feat_high_small))
+                    skip_downsample_feat, feat_high_small), downsample_feat))
                 outs.append(out)
-            else:
-                raise NotImplementedError(
-                    f'SKIPPAFPN {i + 1} layer are not implemented !')
+            elif i == 4:
+                if self.add_extra_convs == 'on_reduce':
+                    skip_feat_low_large = outs[-2]
+                    skip_downsample_feat = self.skip_downsample_convs[i - 2](
+                        skip_feat_low_large)
+                    out = self.pafpn_convs[i - 1](self.tensor_add(self.tensor_add(
+                        skip_downsample_feat, feat_high_small), downsample_feat))
+                    outs.append(out)
+                elif self.add_extra_convs == 'on_output':
+                    skip_feat_low_large = outs[-2]
+                    skip_downsample_feat = self.skip_downsample_convs[i - 2](
+                        skip_feat_low_large)
+                    out = self.pafpn_convs[i - 1](self.tensor_add(
+                        skip_downsample_feat, downsample_feat))
+                    outs.append(out)
+                elif self.add_extra_convs == 'on_reduce_wo_output':
+                    skip_feat_low_large = outs[-2]
+                    skip_downsample_feat = self.skip_downsample_convs[i - 2](
+                        skip_feat_low_large)
+                    out = self.pafpn_convs[i - 1](self.tensor_add(
+                        skip_downsample_feat, feat_high_small))
+                    outs.append(out)
+                else:
+                    raise NotImplementedError(
+                        f'SKIPPAFPN {i + 1} layer are not implemented !')
 
         return tuple(outs)
 
@@ -1221,7 +1244,7 @@ class ImprovedPAFPN(BaseModule):
         in_channels: List[int],
         out_channels: int,
         num_outs: int,
-        concat_kernel_size: int = 3,
+        concat_kernel_size: int = 1,
         start_level: int = 0,
         end_level: int = -1,
         add_extra_convs: Union[bool, str] = 'on_reduce',
@@ -1240,6 +1263,7 @@ class ImprovedPAFPN(BaseModule):
                 in_channels=in_channels,
                 out_channels=out_channels,
                 num_outs=num_outs,
+                add_extra_convs=add_extra_convs,
                 start_level=start_level,
                 end_level=end_level,
                 norm_cfg=norm_cfg,

@@ -1,4 +1,4 @@
-from .TransformerWithFCA import TransformerWithFCA
+from .TR import TransformerWithFCA, TR, SpatialTR, ChannelTR
 __all__ = [
-    'TransformerWithFCA'
+    'TransformerWithFCA', 'TR', 'SpatialTR', 'ChannelTR'
 ]

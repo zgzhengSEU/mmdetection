@@ -151,38 +151,86 @@ set +x
 
 # python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_DH-tiny.py --amp
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_TR_DCNv2.py  --amp
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_TR_DCNv2.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_TR.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_value_DCNv2.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_value.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_kv_DCNv2.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_kv.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_TR_DCNv2.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_TR.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR_DCNv2.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR_Noshortcut_DCNv2.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR_Noshortcut.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR.py  --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-para_spatial.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-para_spatial_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-para_spatial-before-TR.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-para_spatial-before-TR_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_GA_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_GA234_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_GA-0110_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_GA-0110.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TR-0110-FCA-after.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TR-0110-FCA-before.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TR-0110-FCA-parallel.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TR-0110-FCA-parallelNoshortcut.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_PAFPN_CARAFE_Skip_Parallel_ontput.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_SCPAFPN.py --amp
+# clear
+
+python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-0110_DCNv2.py --amp
 clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_TR.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_value_DCNv2.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-after_value.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_kv_DCNv2.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_kv.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_TR_DCNv2.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-before_TR.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR_DCNv2.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR_Noshortcut_DCNv2.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR_Noshortcut.py  --amp
-clear
-
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_TRFCA-parallel_TR.py  --amp
+python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_small_TR-0110_DCNv2.py --amp
 clear
