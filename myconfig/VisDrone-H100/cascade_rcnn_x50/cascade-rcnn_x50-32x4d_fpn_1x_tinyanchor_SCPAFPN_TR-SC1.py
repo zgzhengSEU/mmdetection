@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_x50-32x4d_fpn_1x"]
+TAGS = ["casc_x50-32x4d_fpn_1x", 'SCPAFPN', 'tinyanchor', 'TR']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_TR-0110_DCNv2"
+ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_TR-SC1"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -58,25 +58,45 @@ model = dict(
         plugins=[
             dict(
                 cfg=dict(
-                    type='TR',
-                    spatial_range=-1,
+                    type='SpatialTR',
                     num_heads=8,
-                    attention_type='0110',
-                    FCA_pos = 'none',
-                    ResNext = True,
                     q_stride=2,
                     kv_stride=2),
                 stages=(False, False, True, True),
+                position='after_conv2'),
+            dict(
+                cfg=dict(
+                    type='ChannelTR',
+                    num_heads=1,
+                    kerner_size=1,
+                    reduce=4,
+                    use_in_conv=True,
+                    use_out_conv=True,
+                    use_downsample=False # set pad_size_divisor=128 when True
+                ),
+                stages=(False, False, True, True),
                 position='after_conv2')
         ],
-        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
-        stage_with_dcn=(False, True, True, True),
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
+    neck=dict(
+        type='ImprovedPAFPN',
+        use_type='PAFPN_CARAFE_Skip_Parallel_Old',
+        add_extra_convs='on_output',
+        reduce_kernel_size=3,
+        concat_kernel_size=1,
+        norm_cfg=None,
+        upsample_cfg=dict(
+            type='carafe',
+            up_kernel=5,
+            up_group=1,
+            encoder_kernel=3,
+            encoder_dilation=1,
+            compressed_channels=64)),
     rpn_head=dict(
         anchor_generator=dict(
             scales=[4],
-            ratios=[0.5, 1.0, 2.0])))
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
 
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),

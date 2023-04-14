@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb', 'Guided']
+TAGS = ["casc_r50_fpn_1x", 'rsb', 'smallanchor']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_Guided"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb_tinyanchor-testl2"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -30,7 +30,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 8
+train_batch_size_per_gpu = 16
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -46,57 +46,18 @@ train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_n
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
-
+# ========================== model =============================================================================
 
 checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
 model = dict(
     backbone=dict(
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-    rpn_head=dict(
-        _delete_=True,
-        type='GARPNHead',
-        in_channels=256,
-        feat_channels=256,
-        approx_anchor_generator=dict(
-            type='AnchorGenerator',
-            octave_base_scale=8,
-            scales_per_octave=3,
-            ratios=[0.5, 1.0, 2.0],
-            strides=[4, 8, 16, 32, 64]),
-        square_anchor_generator=dict(
-            type='AnchorGenerator',
-            ratios=[1.0],
-            scales=[8],
-            strides=[4, 8, 16, 32, 64]),
-        anchor_coder=dict(
-            type='DeltaXYWHBBoxCoder',
-            target_means=[.0, .0, .0, .0],
-            target_stds=[0.07, 0.07, 0.14, 0.14]),
-        bbox_coder=dict(
-            type='DeltaXYWHBBoxCoder',
-            target_means=[.0, .0, .0, .0],
-            target_stds=[0.07, 0.07, 0.11, 0.11]),
-        loc_filter_thr=0.01,
-        loss_loc=dict(
-            type='FocalLoss',
-            use_sigmoid=True,
-            gamma=2.0,
-            alpha=0.25,
-            loss_weight=1.0),
-        loss_shape=dict(type='BoundedIoULoss', beta=0.2, loss_weight=1.0),
-        loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+        rpn_head=dict(
+            anchor_generator=dict(
+                scales=[4],
+                ratios=[0.333, 0.5, 1.0, 2.0, 3.0])),
     roi_head=dict(
-        type='CascadeRoIHead',
-        num_stages=3,
-        stage_loss_weights=[1, 0.5, 0.25],
-        bbox_roi_extractor=dict(
-            type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
-            out_channels=256,
-            featmap_strides=[4, 8, 16, 32]),
         bbox_head=[
             dict(
                 type='Shared2FCBBoxHead',
@@ -149,44 +110,11 @@ model = dict(
                     loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
         ]),
-    # model training and testing settings
     train_cfg=dict(
-        rpn=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.7,
-                neg_iou_thr=0.3,
-                min_pos_iou=0.3,
-                match_low_quality=True,
-                ignore_iof_thr=-1),
-            sampler=dict(
-                type='RandomSampler',
-                num=256,
-                pos_fraction=0.5,
-                neg_pos_ub=-1,
-                add_gt_as_proposals=False),
-            allowed_border=-1, # new
-            pos_weight=-1,
-            debug=False,
-            # new
-            ga_assigner=dict(
-                type='ApproxMaxIoUAssigner',
-                pos_iou_thr=0.7,
-                neg_iou_thr=0.3,
-                min_pos_iou=0.3,
-                ignore_iof_thr=-1),
-            ga_sampler=dict(
-                type='RandomSampler',
-                num=256,
-                pos_fraction=0.5,
-                neg_pos_ub=-1,
-                add_gt_as_proposals=False),
-            center_ratio=0.2,
-            ignore_ratio=0.5),
         rpn_proposal=dict(
             nms_pre=2000,
-            max_per_img=300, #change origin:2000
-            nms_post=1000, # new
+            max_per_img=2000, #change origin:2000
+            # nms_post=1000, # new
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=[
@@ -200,7 +128,7 @@ model = dict(
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
-                    num=256, # change origin:512
+                    num=512, # change origin:512
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
@@ -216,7 +144,7 @@ model = dict(
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
-                    num=256, # change origin:512
+                    num=512, # change origin:512
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
@@ -232,7 +160,7 @@ model = dict(
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
-                    num=256, # change origin:512
+                    num=512, # change origin:512
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
@@ -242,12 +170,14 @@ model = dict(
     test_cfg=dict(
         rpn=dict(
             nms_pre=1000,
-            max_per_img=300, # change origin:1000
-            nms_post=1000, # new 
+            # max_per_img=300, # change origin:1000
+            max_per_img=1000, # change origin:1000
+            # nms_post=1000, # new 
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.001, # change origin:0.05
+            # score_thr=0.001, # change origin:0.05
+            score_thr=0.05, # change origin:0.05
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100))
 )
@@ -256,4 +186,3 @@ optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
     paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
 
-optim_wrapper = dict(clip_grad=dict(max_norm=35, norm_type=2)) # new

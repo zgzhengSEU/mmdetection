@@ -1,16 +1,16 @@
 _base_ = [
-    '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
-    '../../../configs/_base_/datasets/visdrone_detection.py',
-    '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
+    '../../../configs/_base_/models/BJH-cascade-rcnn_r50_fpn.py',
+    '../../../configs/_base_/datasets/BJH_detection.py',
+    '../../../configs/_base_/schedules/schedule_2x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'noload']
+TAGS = ["casc_r50_fpn_2x", 'mmpretrain']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x"
-DATASET_NAME = "VisDrone"
+ALGO_NAME = "cascade-rcnn_r50_fpn_2x"
+DATASET_NAME = "BJHDrone"
 
 Wandb_init_kwargs = dict(
     project=DATASET_NAME,
@@ -21,7 +21,7 @@ Wandb_init_kwargs = dict(
     # id="",
     allow_val_change=True
 )
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 import datetime as dt
@@ -48,32 +48,8 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 
 # ==================================================================================================================================================
 
-tta_model = dict(
-    type='DetTTAModel',
-    tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100))
-
-img_scales = [(1333, 800), (666, 400), (2000, 1200)]
-tta_pipeline = [
-    dict(type='LoadImageFromFile', backend_args=None),
-    dict(
-        type='TestTimeAug',
-        transforms=[
-            [
-                dict(type='Resize', scale=s, keep_ratio=True) for s in img_scales
-            ], 
-            [
-                dict(type='RandomFlip', prob=1.),
-                dict(type='RandomFlip', prob=0.)
-            ], 
-            [
-                dict(type='LoadAnnotations', with_bbox=True)
-            ],
-            [
-                dict(
-                    type='PackDetInputs',
-                    meta_keys=('img_id', 'img_path', 'ori_shape',
-                                'img_shape', 'scale_factor', 'flip',
-                                'flip_direction'))
-            ]
-        ])
-]
+checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb32_in1k_20210831-ea4938fc.pth'  # mmpretrain-resnet50
+model = dict(
+    backbone=dict(
+        init_cfg=dict(
+            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)))

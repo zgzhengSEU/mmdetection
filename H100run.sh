@@ -229,8 +229,62 @@ set +x
 # python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_r50_fpn_1x_rsb_SCPAFPN.py --amp
 # clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-0110_DCNv2.py --amp
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-0110_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_small_TR-0110_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-SC1_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-C1S_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-SC8_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_TR-C8S_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_TR-SC1_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_TR-SC1_DCNv2_mdpool.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_TR-SC1_DCNv2_tinyDH-GIOU.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_final/cascade-rcnn_r50_fpn_1x_rsb_tinyanchor.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_final/cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SCPAFPN.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_final/cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SCPAFPN_TR-SC1.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_final/cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SCPAFPN_TR-SC1_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_final/cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SCPAFPN_TR-SC1_DCNv2_tinyDH-GIOU.py --amp
+# clear
+
+python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_TR-SC1.py --amp
 clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_rsb/cascade-rcnn_x50-32x4d_fpn_1x_small_TR-0110_DCNv2.py --amp
+python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_DCNv2.py --amp
+clear
+
+python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyDH.py --amp
+clear
+
+python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_tinyDH.py --amp
 clear

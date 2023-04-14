@@ -13,6 +13,8 @@ from mmdet.engine.hooks.utils import trigger_visualization_hook
 from mmdet.evaluation import DumpDetResults
 from mmdet.registry import RUNNERS
 
+import datetime as dt
+NOW_TIME = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 # TODO: support fuse_conv_bn and format_only
 def parse_args():
@@ -22,6 +24,9 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
+        nargs='?',
+        type=str,
+        const='default',
         help='the directory to save the file containing evaluation metrics')
     parser.add_argument(
         '--out',
@@ -29,7 +34,9 @@ def parse_args():
         help='dump predictions to a pickle file for offline evaluation')
     parser.add_argument(
         '--json-prefix',
+        nargs='?',
         type=str,
+        const='default',
         help='the prefix of the output json file without perform evaluation, '
         'which is useful when you want to format the result to a specific '
         'format and submit it to the test server')
@@ -77,12 +84,16 @@ def main():
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:
         # update configs according to CLI args if args.work_dir is not None
-        cfg.work_dir = args.work_dir
+        if args.work_dir == 'default':
+            cfg.work_dir = osp.join('./work_dirs', f'model_test/{osp.splitext(osp.basename(args.config))[0]}/{NOW_TIME}')
+        else:
+            cfg.work_dir = args.work_dir
     elif cfg.get('work_dir', None) is None:
         # use config filename as default work_dir if cfg.work_dir is None
         cfg.work_dir = osp.join('./work_dirs',
                                 osp.splitext(osp.basename(args.config))[0])
-
+    print(f'work_dir: {cfg.work_dir}')
+    
     cfg.load_from = args.checkpoint
 
     if args.show or args.show_dir:
@@ -90,6 +101,8 @@ def main():
 
     # add `format_only` and `outfile_prefix` into cfg
     if args.json_prefix is not None:
+        if args.json_prefix == 'default':
+            args.json_prefix = f'{cfg.work_dir}/{osp.splitext(osp.basename(args.config))[0]}_result'
         print(f'json output: {args.json_prefix}.json')
         cfg_json = {
             'test_evaluator.format_only': True,

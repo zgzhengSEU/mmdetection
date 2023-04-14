@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'noload']
+TAGS = ["casc_x50-32x4d_fpn_1x", 'PAFPN']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x"
+ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_SCPAFPN"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -21,7 +21,7 @@ Wandb_init_kwargs = dict(
     # id="",
     allow_val_change=True
 )
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 import datetime as dt
@@ -48,32 +48,30 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 
 # ==================================================================================================================================================
 
-tta_model = dict(
-    type='DetTTAModel',
-    tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100))
 
-img_scales = [(1333, 800), (666, 400), (2000, 1200)]
-tta_pipeline = [
-    dict(type='LoadImageFromFile', backend_args=None),
-    dict(
-        type='TestTimeAug',
-        transforms=[
-            [
-                dict(type='Resize', scale=s, keep_ratio=True) for s in img_scales
-            ], 
-            [
-                dict(type='RandomFlip', prob=1.),
-                dict(type='RandomFlip', prob=0.)
-            ], 
-            [
-                dict(type='LoadAnnotations', with_bbox=True)
-            ],
-            [
-                dict(
-                    type='PackDetInputs',
-                    meta_keys=('img_id', 'img_path', 'ori_shape',
-                                'img_shape', 'scale_factor', 'flip',
-                                'flip_direction'))
-            ]
-        ])
-]
+checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext50_32x4d_b32x8_imagenet_20210429-56066e27.pth'  # noqa
+model = dict(
+    backbone=dict(
+        type='ResNeXt',
+        groups=32,
+        base_width=4,
+        init_cfg=dict(
+            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
+    neck=dict(
+        type='ImprovedPAFPN',
+        use_type='PAFPN_CARAFE_Skip_Parallel_Old',
+        add_extra_convs='on_output',
+        reduce_kernel_size=3,
+        concat_kernel_size=1,
+        norm_cfg=None,
+        upsample_cfg=dict(
+            type='carafe',
+            up_kernel=5,
+            up_group=1,
+            encoder_kernel=3,
+            encoder_dilation=1,
+            compressed_channels=64)))
+
+optim_wrapper = dict(
+    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
+    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))

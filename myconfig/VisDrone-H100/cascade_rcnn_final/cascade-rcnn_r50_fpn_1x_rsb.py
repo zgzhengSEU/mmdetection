@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_x50-32x4d_fpn_1x"]
+TAGS = ["casc_r50_fpn_1x", 'rsb']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor"
+ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -49,18 +49,11 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 # ==================================================================================================================================================
 
 
-checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext50_32x4d_b32x8_imagenet_20210429-56066e27.pth'  # noqa
+checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
 model = dict(
     backbone=dict(
-        type='ResNeXt',
-        groups=32,
-        base_width=4,
         init_cfg=dict(
-            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-    rpn_head=dict(
-        anchor_generator=dict(
-            scales=[4],
-            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
+            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)))
 
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),

@@ -7,9 +7,9 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_x50-32x4d_fpn_1x", 'PAFPN']
+TAGS = ["casc_x50-32x4d_fpn_1x", 'SCPAFPN', 'tinyanchor', 'DCNv2']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_SCPAFPN"
+ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_DCNv2"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -55,22 +55,31 @@ model = dict(
         type='ResNeXt',
         groups=32,
         base_width=4,
+        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, True, True, True),
         init_cfg=dict(
             type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
     neck=dict(
         type='ImprovedPAFPN',
-        use_type='PAFPN_CARAFE_Skip_Parallel',
+        use_type='PAFPN_CARAFE_Skip_Parallel_Old',
         add_extra_convs='on_output',
+        reduce_kernel_size=3,
         concat_kernel_size=1,
+        norm_cfg=None,
         upsample_cfg=dict(
             type='carafe',
             up_kernel=5,
             up_group=1,
             encoder_kernel=3,
             encoder_dilation=1,
-            compressed_channels=64)))
+            compressed_channels=64)),
+    rpn_head=dict(
+        anchor_generator=dict(
+            scales=[4],
+            ratios=[0.333, 0.5, 1.0, 2.0, 3.0])))
 
 optim_wrapper = dict(
-    clip_grad=dict(max_norm=5, norm_type=2),
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
     paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
+
+
