@@ -7,10 +7,10 @@ _base_ = [
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_x50-32x4d_fpn_1x", 'SCPAFPN', 'tinyanchor', 'TR', 'DCNv2', 'DH']
+TAGS = ["casc_x101-32x4d_fpn_1x", 'SCPAFPN', 'tinyanchor', 'TR', 'DCNv2', 'DH']
 GROUP_NAME = "cascade-rcnn"
 # GROUP_NAME = "Test"
-ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_TR-SC1_DCNv2_tinyDH_softnms_TTA"
+ALGO_NAME = "cascade-rcnn_x101-32x4d_fpn_1x_tinyanchor_SCPAFPN_TR-SC1_DCNv2_tinyDH"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -22,7 +22,7 @@ Wandb_init_kwargs = dict(
     # id="l8mtd4n4",
     allow_val_change=True
 )
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
 
 # ==========================================
 import datetime as dt
@@ -31,7 +31,7 @@ work_dir = f"work_dirs/{DATASET_NAME}/{ALGO_NAME}/{NOW_TIME}"
 
 # =============== datasets ======================================================================================================
 # Batch size of a single GPU during training
-train_batch_size_per_gpu = 16
+train_batch_size_per_gpu = 8
 # Worker to pre-fetch data for each single GPU during training
 train_num_workers = 8
 # Batch size of a single GPU during valing
@@ -50,15 +50,11 @@ test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_
 # ==================================================================================================================================================
 
 
-checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext50_32x4d_b32x8_imagenet_20210429-56066e27.pth'  # noqa
+checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext101_32x4d_b32x8_imagenet_20210506-e0fa3dd5.pth'  # noqa
 model = dict(
-    test_cfg=dict(
-        rcnn=dict(
-            score_thr=0.05,
-            nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.001),
-            max_per_img=500)),
     backbone=dict(
         type='ResNeXt',
+        depth=101,
         groups=32,
         base_width=4,
         plugins=[
@@ -175,10 +171,22 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0))
-        ])
-    )
-
+                               loss_weight=1.0))]),
+    test_cfg=dict(
+        rpn=dict(
+            nms_pre=1000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            score_thr=0.05,
+            nms=dict(type='nms', iou_threshold=0.5),
+            max_per_img=100)))
+    # test_cfg=dict(
+    #     rcnn=dict(
+    #         score_thr=0.05,
+    #         nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.001),
+    #         max_per_img=500)),
 
 optim_wrapper = dict(
     optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
@@ -190,7 +198,7 @@ test_evaluator = _base_.val_evaluator
 
 tta_model = dict(
     type='DetTTAModel',
-    tta_cfg=dict(nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.001), max_per_img=500))
+    tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100))
 
 img_scales = [(1333, 800), (666, 400), (2000, 1200), (2400, 1600)]
 tta_pipeline = [

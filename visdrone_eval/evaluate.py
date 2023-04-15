@@ -25,8 +25,8 @@ def main():
     dataset_dir = args.dataset_dir
     res_dir = args.res_dir
 
-    gt_dir = osp.join(dataset_dir)
-    img_dir = osp.join(dataset_dir.replace('annotations', 'images'))
+    gt_dir = osp.join(dataset_dir, 'annotations')
+    img_dir = osp.join(dataset_dir, 'images')
 
     all_gt = []
     all_det = []

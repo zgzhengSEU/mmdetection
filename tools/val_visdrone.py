@@ -65,6 +65,9 @@ def parse_args():
         default='none',
         help='job launcher')
     parser.add_argument('--tta', action='store_true')
+    parser.add_argument('--softnms', action='store_true')
+    parser.add_argument('--val', action='store_true')
+    parser.add_argument('--nowandb', action='store_true')
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
@@ -80,12 +83,21 @@ def main():
     cfg.launcher = args.launcher
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
-
+        
+    if args.val:
+        cfg.test_dataloader = cfg.val_dataloader
+        cfg.test_evaluator = cfg.val_evaluator
+    
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:
         # update configs according to CLI args if args.work_dir is not None
         if args.work_dir == 'default':
-            cfg.work_dir = osp.join('./work_dirs', f'model_test/{osp.splitext(osp.basename(args.config))[0]}/{NOW_TIME}')
+            work_name = f'{osp.splitext(osp.basename(args.config))[0]}'
+            if args.softnms:
+                work_name = f'{work_name}_SoftNMS'
+            if args.tta:
+                work_name = f'{work_name}_TTA'
+            cfg.work_dir = osp.join('./work_dirs', f'model_test/{work_name}/{NOW_TIME}')
         else:
             cfg.work_dir = args.work_dir
     elif cfg.get('work_dir', None) is None:
@@ -111,14 +123,28 @@ def main():
         cfg.merge_from_dict(cfg_json)
 
     if args.tta:
-
         if 'tta_model' not in cfg:
             warnings.warn('Cannot find ``tta_model`` in config, '
                           'we will set it as default.')
-            cfg.tta_model = dict(
-                type='DetTTAModel',
-                tta_cfg=dict(
-                    nms=dict(type='nms', iou_threshold=0.5), max_per_img=100))
+            if args.softnms:
+                cfg.tta_model = dict(
+                    type='DetTTAModel',
+                    tta_cfg=dict(
+                        nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.001), max_per_img=500))
+                print('USE SoftNMS In TTA')
+            else:
+                cfg.tta_model = dict(
+                    type='DetTTAModel',
+                    tta_cfg=dict(
+                        nms=dict(type='nms', iou_threshold=0.5), max_per_img=100))
+        else:
+            if args.softnms:
+                cfg.tta_model = dict(
+                    type='DetTTAModel',
+                    tta_cfg=dict(
+                        nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.001), max_per_img=500))
+                print('USE SoftNMS In TTA')
+                
         if 'tta_pipeline' not in cfg:
             warnings.warn('Cannot find ``tta_pipeline`` in config, '
                           'we will set it as default.')
@@ -144,7 +170,33 @@ def main():
             cfg.tta_pipeline[-1] = flip_tta
         cfg.model = ConfigDict(**cfg.tta_model, module=cfg.model)
         cfg.test_dataloader.dataset.pipeline = cfg.tta_pipeline
+        print('USE TTA')
+        
+    if args.softnms:
+        if 'test_cfg' in cfg.model:
+            cfg.model.test_cfg.rcnn = dict(
+                                        score_thr=0.05, 
+                                        nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.001), 
+                                        max_per_img=500) 
+            print('USE SoftNMS In test_cfg.rcnn')
+            
+            
+    if 'visualizer' in cfg:
+        if 'Wandb_init_kwargs' in cfg:
+            Wandb_init_kwargs = cfg.Wandb_init_kwargs
+            Wandb_init_kwargs['group'] = 'Val'
+            old_name = Wandb_init_kwargs['name']
+            if args.softnms:
+                old_name = f'{old_name}_SoftNMS'
+                Wandb_init_kwargs['name'] = old_name
+            if args.tta:
+                old_name = f'{old_name}_TTA'
+                Wandb_init_kwargs['name'] = old_name
+            cfg.visualizer.vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)]         
 
+    if args.nowandb:
+        cfg.visualizer.vis_backends = [dict(type='LocalVisBackend')]
+              
     # build the runner from config
     if 'runner_type' not in cfg:
         # build the default runner
@@ -163,7 +215,28 @@ def main():
 
     # start testing
     runner.test()
-
-
+    
+    print('============================== VisDrone2019-DET Toolkit =================================================')
+    from visdrone.json_to_txt import Json2Txt
+    from visdrone_eval.evaluate_all_in_one import visdrone_evaluate
+    mode = 'val' if args.val else 'test'
+    gt_json = f'data/VisDrone/annotations/{mode}.json'
+    annotations_dir = f'data/VisDrone/annotations/{mode}'
+    det_json = f'{args.json_prefix}.bbox.json'
+    det_annotations_dir = f'work_dirs/model_test/temp_det_annotations_dir'
+    
+    # json -> txt
+    os.system(f'rm -rf {det_annotations_dir}')
+    os.mkdir(det_annotations_dir)
+    tool = Json2Txt(gt_json, det_json, det_annotations_dir)
+    tool.to_txt()
+    # eval
+    tool = visdrone_evaluate(annotations_dir, det_annotations_dir)
+    tool.run_eval()
+    # clean
+    os.system(f'rm -rf {det_annotations_dir}')
+    
 if __name__ == '__main__':
     main()
+    
+    
