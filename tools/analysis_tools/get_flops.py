@@ -20,8 +20,6 @@ try:
 except ImportError:
     raise ImportError('Please upgrade mmengine >= 0.6.0')
 
-from fvcore.nn import FlopCountAnalysis
-from fvcore.nn import flop_count_table
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Get a detector flops')
@@ -31,17 +29,6 @@ def parse_args():
         type=int,
         default=100,
         help='num images of calculate model flops')
-    parser.add_argument(
-        '--old',
-        action='store_true',
-        default=False,
-        help='use old get flops')
-    parser.add_argument(
-        '--shape',
-        type=int,
-        nargs='+',
-        default=[1280, 800],
-        help='input image size in old get flops')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -125,120 +112,11 @@ def inference(args, logger):
 
     return result
 
-def old_inference(args, logger):
-    if str(torch.__version__) < '1.12':
-        logger.warning(
-            'Some config files, such as configs/yolact and configs/detectors,'
-            'may have compatibility issues with torch.jit when torch<1.12. '
-            'If you want to calculate flops for these models, '
-            'please make sure your pytorch version is >=1.12.')
-
-    config_name = Path(args.config)
-    if not config_name.exists():
-        logger.error(f'{config_name} not found.')
-
-    cfg = Config.fromfile(args.config)
-    cfg.work_dir = tempfile.TemporaryDirectory().name
-    cfg.log_level = 'WARN'
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
-
-    init_default_scope(cfg.get('default_scope', 'mmdet'))
-
-    # TODO: The following usage is temporary and not safe
-    # use hard code to convert mmSyncBN to SyncBN. This is a known
-    # bug in mmengine, mmSyncBN requires a distributed environment，
-    # this question involves models like configs/strong_baselines
-    if hasattr(cfg, 'head_norm_cfg'):
-        cfg['head_norm_cfg'] = dict(type='SyncBN', requires_grad=True)
-        cfg['model']['roi_head']['bbox_head']['norm_cfg'] = dict(
-            type='SyncBN', requires_grad=True)
-        cfg['model']['roi_head']['mask_head']['norm_cfg'] = dict(
-            type='SyncBN', requires_grad=True)
-
-    if len(args.shape) == 1:
-        h = w = args.shape[0]
-    elif len(args.shape) == 2:
-        h, w = args.shape
-    else:
-        raise ValueError('invalid input shape')
-    result = {}
-
-    # Supports two ways to calculate flops,
-    # 1. randomly generate a picture
-    # 2. load a picture from the dataset
-    # In two stage detectors, _forward need batch_samples to get
-    # rpn_results_list, then use rpn_results_list to compute flops,
-    # so only the second way is supported
-    try:
-        model = MODELS.build(cfg.model)
-        if torch.cuda.is_available():
-            model.cuda()
-        model = revert_sync_batchnorm(model)
-        data_batch = {'inputs': [torch.rand(3, h, w)], 'batch_samples': [None]}
-        data = model.data_preprocessor(data_batch)
-        result['ori_shape'] = (h, w)
-        result['pad_shape'] = data['inputs'].shape[-2:]
-        model.eval()
-        outputs = get_model_complexity_info(
-            model,
-            None,
-            inputs=data['inputs'],
-            show_table=False,
-            show_arch=False)
-        
-
-        fvcore_flops = FlopCountAnalysis(model, data['inputs'])
-        
-
-        flops = outputs['flops']
-        params = outputs['params']
-        result['compute_type'] = 'direct: randomly generate a picture'
-
-    except TypeError:
-        logger.warning(
-            'Failed to directly get FLOPs, try to get flops with real data')
-        data_loader = Runner.build_dataloader(cfg.val_dataloader)
-        data_batch = next(iter(data_loader))
-        model = MODELS.build(cfg.model)
-        if torch.cuda.is_available():
-            model = model.cuda()
-        model = revert_sync_batchnorm(model)
-        model.eval()
-        _forward = model.forward
-        data = model.data_preprocessor(data_batch)
-        result['ori_shape'] = data['data_samples'][0].ori_shape
-        result['pad_shape'] = data['data_samples'][0].pad_shape
-
-        del data_loader
-        model.forward = partial(_forward, data_samples=data['data_samples'])
-        outputs = get_model_complexity_info(
-            model,
-            None,
-            inputs=data['inputs'],
-            show_table=False,
-            show_arch=False)
-        fvcore_flops = FlopCountAnalysis(model, data['inputs'])
-        flops = outputs['flops']
-        params = outputs['params']
-        result['compute_type'] = 'dataloader: load a picture from the dataset'
-
-    flops = _format_size(flops)
-    params = _format_size(params)
-    result['flops'] = flops
-    result['params'] = params
-    result['fvcore_flops'] = fvcore_flops
-    return result
-
 
 def main():
     args = parse_args()
     logger = MMLogger.get_instance(name='MMLogger')
-    if args.old:
-        result = old_inference(args, logger)
-        print(flop_count_table(result['fvcore_flops']))
-    else:
-        result = inference(args, logger)
+    result = inference(args, logger)
     split_line = '=' * 30
     ori_shape = result['ori_shape']
     pad_shape = result['pad_shape']
