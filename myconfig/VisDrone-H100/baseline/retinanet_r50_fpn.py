@@ -1,15 +1,15 @@
 _base_ = [
-    '../../../configs/_base_/models/visdrone-cascade-rcnn_r50_fpn.py',
+    '../../../configs/_base_/models/retinanet_r50_fpn.py',
     '../../../configs/_base_/datasets/visdrone_detection.py',
-    '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
+    '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py' 
 ]
 
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_x50-32x4d_fpn_1x", 'PAFPN']
-GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_SCPAFPN"
+TAGS = ["retinanet"]
+GROUP_NAME = "Baseline"
+ALGO_NAME = "retinanet_r50_fpn"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -18,7 +18,7 @@ Wandb_init_kwargs = dict(
     name=ALGO_NAME,
     tags=TAGS,
     resume="allow",
-    # id="pgkxlel0",
+    # id="",
     allow_val_change=True
 )
 visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
@@ -47,34 +47,11 @@ val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_wor
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
 
 # ==================================================================================================================================================
+load_from = 'https://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_1x_coco/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
 
-
-checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext50_32x4d_b32x8_imagenet_20210429-56066e27.pth'  # noqa
 model = dict(
-    backbone=dict(
-        type='ResNeXt',
-        groups=32,
-        base_width=4,
-        init_cfg=dict(
-            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
-    neck=dict(
-        type='ImprovedPAFPN',
-        use_type='SCPAFPN',
-        add_extra_convs='on_output',
-        reduce_kernel_size=1,
-        concat_kernel_size=1,
-        use_fuse_conv=True,
-        fuse_kernel_size=3,
-        norm_cfg=None,
-        upsample_cfg=dict(
-            type='carafe',
-            up_kernel=5,
-            up_group=1,
-            encoder_kernel=3,
-            encoder_dilation=1,
-            compressed_channels=64)))
+    bbox_head=dict(num_classes=10))
 
+# optimizer
 optim_wrapper = dict(
-    clip_grad=dict(max_norm=5, norm_type=2),
-    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
-    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
+    optimizer=dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001))

@@ -4,23 +4,12 @@ _base_ = [
     '../../../configs/_base_/schedules/schedule_1x.py', '../../../configs/_base_/default_runtime.py'
 ]
 
-checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb256-rsb-a1-600e_in1k_20211228-20e21305.pth'  # noqa
-model = dict(
-    backbone=dict(
-        init_cfg=dict(
-            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)))
-
-optim_wrapper = dict(
-    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
-    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))
-
-
 # ======================== wandb & run =========================================================================================
 
 # ===========================================
-TAGS = ["casc_r50_fpn_1x", 'rsb']
+TAGS = ["casc_x50-32x4d_fpn_1x", 'PAFPN']
 GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_r50_fpn_1x_rsb"
+ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_SCPAFPNFinal"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -29,7 +18,7 @@ Wandb_init_kwargs = dict(
     name=ALGO_NAME,
     tags=TAGS,
     resume="allow",
-    # id="",
+    # id="pgkxlel0",
     allow_val_change=True
 )
 visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs=Wandb_init_kwargs)])
@@ -56,3 +45,37 @@ test_num_workers = 2
 train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_num_workers)
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
+
+# ==================================================================================================================================================
+
+
+checkpoint = 'https://download.openmmlab.com/mmclassification/v0/resnext/resnext50_32x4d_b32x8_imagenet_20210429-56066e27.pth'  # noqa
+model = dict(
+    backbone=dict(
+        type='ResNeXt',
+        groups=32,
+        base_width=4,
+        init_cfg=dict(
+            type='Pretrained', prefix='backbone.', checkpoint=checkpoint)),
+    neck=dict(
+        type='ImprovedPAFPN',
+        use_type='SCPAFPNFinal',
+        add_extra_convs='on_output',
+        reduce_kernel_size=1,
+        concat_kernel_size=1,
+        use_concat_conv=True,
+        fpn_kernel_size=3,
+        pafpn_kernel_size=3,
+        norm_cfg=None,
+        upsample_cfg=dict(
+            type='carafe',
+            up_kernel=5,
+            up_group=1,
+            encoder_kernel=3,
+            encoder_dilation=1,
+            compressed_channels=64)))
+
+optim_wrapper = dict(
+    clip_grad=dict(max_norm=5, norm_type=2),
+    optimizer=dict(_delete_=True, type='AdamW', lr=0.0002, weight_decay=0.05),
+    paramwise_cfg=dict(norm_decay_mult=0., bypass_duplicate=True))

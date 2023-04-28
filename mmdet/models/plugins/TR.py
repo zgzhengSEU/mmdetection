@@ -9,12 +9,14 @@ from mmengine.model import kaiming_init
 from mmengine.registry import MODELS
 from mmcv.cnn import ConvModule, Scale
 
+
 class LayerNorm(nn.Module):
     r""" LayerNorm that supports two data formats: channels_last (default) or channels_first. 
     The ordering of the dimensions in the inputs. channels_last corresponds to inputs with 
     shape (batch_size, height, width, channels) while channels_first corresponds to inputs 
     with shape (batch_size, channels, height, width).
     """
+
     def __init__(self, normalized_shape, eps=1e-6, data_format="channels_last"):
         super().__init__()
         self.weight = nn.Parameter(torch.ones(normalized_shape))
@@ -22,9 +24,9 @@ class LayerNorm(nn.Module):
         self.eps = eps
         self.data_format = data_format
         if self.data_format not in ["channels_last", "channels_first"]:
-            raise NotImplementedError 
+            raise NotImplementedError
         self.normalized_shape = (normalized_shape, )
-    
+
     def forward(self, x):
         if self.data_format == "channels_last":
             return F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
@@ -34,6 +36,7 @@ class LayerNorm(nn.Module):
             x = (x - u) / torch.sqrt(s + self.eps)
             x = self.weight[:, None, None] * x + self.bias[:, None, None]
             return x
+
 
 @MODELS.register_module()
 class TR(nn.Module):
@@ -437,8 +440,8 @@ class TR(nn.Module):
                     bias=0,
                     distribution='uniform',
                     a=1)
-                
-                
+
+
 class CAM(nn.Module):
     """Channel Attention Module (CAM)"""
 
@@ -448,17 +451,18 @@ class CAM(nn.Module):
     def forward(self, x):
         """Forward function."""
         batch_size, channels, height, width = x.size()
-        proj_query = x.view(batch_size, channels, -1) # [8, 128, 800]
-        proj_key = x.view(batch_size, channels, -1).permute(0, 2, 1) # [8, 800, 128]
-        energy = torch.bmm(proj_query, proj_key) # [8, 128, 128]
-        energy_new = torch.max(energy, -1, keepdim=True)[0] # [8, 128, 1]
-        energy_new = energy_new.expand_as(energy) # [8, 128, 128]
-        energy_new = energy_new - energy # [8, 128, 128]
-        attention = F.softmax(energy_new, dim=-1) # [8, 128, 128]
-        proj_value = x.view(batch_size, channels, -1) # [8, 128, 800]
+        proj_query = x.view(batch_size, channels, -1)  # [8, 128, 800] (C, N)
+        proj_key = x.view(batch_size, channels, -
+                          1).permute(0, 2, 1)  # [8, 800, 128] (N, C)
+        energy = torch.bmm(proj_query, proj_key)  # [8, 128, 128]
+        energy_new = torch.max(energy, -1, keepdim=True)[0]  # [8, 128, 1]
+        energy_new = energy_new.expand_as(energy)  # [8, 128, 128]
+        energy_new = energy_new - energy  # [8, 128, 128]
+        attention = F.softmax(energy_new, dim=-1)  # [8, 128, 128]
+        proj_value = x.view(batch_size, channels, -1)  # [8, 128, 800] (C, N)
 
-        out = torch.bmm(attention, proj_value) # [8, 128, 800]
-        out = out.view(batch_size, channels, height, width) # [8, 128, 40, 20]
+        out = torch.bmm(attention, proj_value)  # [8, 128, 800]
+        out = out.view(batch_size, channels, height, width)  # [8, 128, 40, 20]
 
         return out
 
@@ -477,23 +481,27 @@ class CTR(nn.Module):
         dim = N // self.num_head
         proj_query = x.view(batch_size, channels, N)
         proj_query = proj_query.permute(0, 2, 1)
-        proj_query = proj_query.contiguous().view(batch_size, self.num_head, dim, channels)
+        proj_query = proj_query.contiguous().view(
+            batch_size, self.num_head, dim, channels)
         proj_query = proj_query.permute(0, 1, 3, 2)
-        
+
         proj_key = x.view(batch_size, channels, N).permute(0, 2, 1)
         proj_key = proj_key.contiguous().view(batch_size, self.num_head, dim, channels)
-        
+
         energy = torch.matmul(proj_query, proj_key)
-        energy_new = torch.max(energy, -1, keepdim=True)[0].expand_as(energy) - energy
+        energy_new = torch.max(
+            energy, -1, keepdim=True)[0].expand_as(energy) - energy
         attention = F.softmax(energy_new, dim=-1)
         proj_value = x.view(batch_size, channels, N)
         proj_value = proj_value.permute(0, 2, 1)
-        proj_value = proj_value.contiguous().view(batch_size, self.num_head, dim, channels)
+        proj_value = proj_value.contiguous().view(
+            batch_size, self.num_head, dim, channels)
         proj_value = proj_value.permute(0, 1, 3, 2)
-        
+
         out = torch.matmul(attention, proj_value)
         out = out.permute(0, 1, 3, 2)
-        out = out.contiguous().view(batch_size, self.num_head * dim, channels).permute(0, 2, 1)
+        out = out.contiguous().view(batch_size, self.num_head *
+                                    dim, channels).permute(0, 2, 1)
         out = out.view(batch_size, channels, height, width)
 
         return out
@@ -526,12 +534,12 @@ class ChannelTR(nn.Module):
         self.use_in_conv = use_in_conv
         self.use_out_conv = use_out_conv
         self.use_downsample = use_downsample
-        
+
         if self.num_head == 1:
             self.ChannelTransformer = CAM()
         else:
             self.ChannelTransformer = CTR(self.num_head)
-            
+
         self.gamma = Scale(scale=0)
         if self.use_downsample:
             self.downsample = nn.AvgPool2d(kernel_size=2, stride=2)
@@ -552,9 +560,10 @@ class ChannelTR(nn.Module):
                 padding=1 if self.kerner_size == 3 else 0,
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg)  
-        self.norm = LayerNorm(self.in_channels, eps=1e-5, data_format="channels_first")
-        
+                act_cfg=self.act_cfg)
+        self.norm = LayerNorm(self.in_channels, eps=1e-5,
+                              data_format="channels_first")
+
         self.init_weights()
 
     def init_weights(self):
@@ -562,31 +571,33 @@ class ChannelTR(nn.Module):
             if isinstance(m, nn.LayerNorm):
                 nn.init.constant_(m.bias, 0)
                 nn.init.constant_(m.weight, 1.0)
-                
+
     def forward(self, x_input: torch.Tensor) -> torch.Tensor:
         out = x_input
-        
+
         if self.use_downsample:
-            out = self.downsample(out)    
-            
+            out = self.downsample(out)
+
         if self.use_in_conv:
             out = self.in_conv(out)
-            
+
         out = self.ChannelTransformer(out)
-        
+
         if self.use_out_conv:
             out = self.out_conv(out)
-        
+
         if self.use_downsample:
-            out = F.interpolate(out, size=x_input.shape[2:], mode='bilinear', align_corners=False)
-        
+            out = F.interpolate(
+                out, size=x_input.shape[2:], mode='bilinear', align_corners=False)
+
         out = self.norm(out)
-        
+
         out = self.gamma(out) + x_input
-        
-        #     
-        
+
+        #
+
         return out
+
 
 @MODELS.register_module()
 class SpatialTR(nn.Module):
@@ -604,7 +615,8 @@ class SpatialTR(nn.Module):
         super().__init__()
 
         # hard range means local range for non-local operation
-        self.position_embedding_dim = (position_embedding_dim if position_embedding_dim > 0 else in_channels)
+        self.position_embedding_dim = (
+            position_embedding_dim if position_embedding_dim > 0 else in_channels)
         self.position_magnitude = position_magnitude
         self.num_heads = num_heads
         self.in_channels = in_channels
@@ -614,26 +626,31 @@ class SpatialTR(nn.Module):
         out_c = self.qk_embed_dim * num_heads
         self.norm_cfg = norm_cfg
         # Q
-        self.query_conv = ConvModule(in_channels=in_channels, out_channels=out_c, kernel_size=1, norm_cfg=self.norm_cfg)
+        self.query_conv = ConvModule(
+            in_channels=in_channels, out_channels=out_c, kernel_size=1, norm_cfg=self.norm_cfg)
         # self.query_conv = nn.Conv2d(in_channels=in_channels, out_channels=out_c, kernel_size=1, bias=False)
         # self.query_conv.kaiming_init = True
 
         # K
-        self.key_conv = ConvModule(in_channels=in_channels, out_channels=out_c, kernel_size=1, norm_cfg=self.norm_cfg)
+        self.key_conv = ConvModule(
+            in_channels=in_channels, out_channels=out_c, kernel_size=1, norm_cfg=self.norm_cfg)
         # self.key_conv = nn.Conv2d(in_channels=in_channels, out_channels=out_c, kernel_size=1, bias=False)
         # self.key_conv.kaiming_init = True
 
         # V
         self.v_dim = in_channels // num_heads
-        self.value_conv = ConvModule(in_channels=in_channels, out_channels=self.v_dim * num_heads, kernel_size=1, norm_cfg=self.norm_cfg)
+        self.value_conv = ConvModule(
+            in_channels=in_channels, out_channels=self.v_dim * num_heads, kernel_size=1, norm_cfg=self.norm_cfg)
         # self.value_conv = nn.Conv2d(in_channels=in_channels, out_channels=self.v_dim * num_heads, kernel_size=1, bias=False)
         # self.value_conv.kaiming_init = True
 
         # position
-        self.appr_geom_fc_x = nn.Linear(self.position_embedding_dim // 2, out_c, bias=False)
+        self.appr_geom_fc_x = nn.Linear(
+            self.position_embedding_dim // 2, out_c, bias=False)
         self.appr_geom_fc_x.kaiming_init = True
 
-        self.appr_geom_fc_y = nn.Linear(self.position_embedding_dim // 2, out_c, bias=False)
+        self.appr_geom_fc_y = nn.Linear(
+            self.position_embedding_dim // 2, out_c, bias=False)
         self.appr_geom_fc_y.kaiming_init = True
 
         # parameter
@@ -641,39 +658,45 @@ class SpatialTR(nn.Module):
         appr_bias_value = -2 * stdv * torch.rand(out_c) + stdv
         self.appr_bias = nn.Parameter(appr_bias_value)
 
-        # 1x1 
-        self.proj_conv = ConvModule(in_channels=self.v_dim * num_heads, out_channels=in_channels, kernel_size=1, norm_cfg=self.norm_cfg)
+        # 1x1
+        self.proj_conv = ConvModule(in_channels=self.v_dim * num_heads,
+                                    out_channels=in_channels, kernel_size=1, norm_cfg=self.norm_cfg)
         # self.proj_conv = nn.Conv2d(in_channels=self.v_dim * num_heads, out_channels=in_channels, kernel_size=1, bias=True)
         # self.proj_conv.kaiming_init = True
-        
+
         self.gamma = nn.Parameter(torch.zeros(1))
 
         # downsample
         self.q_downsample = nn.AvgPool2d(kernel_size=2, stride=self.q_stride)
         self.kv_downsample = nn.AvgPool2d(kernel_size=2, stride=self.kv_stride)
 
-        self.norm = LayerNorm(self.in_channels, eps=1e-5, data_format="channels_first")
-        self.norm_conv = ConvModule(in_channels=in_channels, out_channels=in_channels, kernel_size=1, norm_cfg=dict(type='BN')) 
+        self.norm = LayerNorm(self.in_channels, eps=1e-5,
+                              data_format="channels_first")
+        self.norm_conv = ConvModule(
+            in_channels=in_channels, out_channels=in_channels, kernel_size=1, norm_cfg=dict(type='BN'))
         self.init_weights()
-        
+
     def forward(self, x_input: torch.Tensor) -> torch.Tensor:
         num_heads = self.num_heads
 
         # downsample ===================================
         x_q = self.q_downsample(x_input)
-        n, _, h, w = x_q.shape # (8, 128, 20, 10)
+        n, _, h, w = x_q.shape  # (8, 128, 20, 10)
 
         x_kv = self.kv_downsample(x_input)
-        _, _, h_kv, w_kv = x_kv.shape # (8, 128, 20, 10)
+        _, _, h_kv, w_kv = x_kv.shape  # (8, 128, 20, 10)
 
         # Q =============================================
-        proj_query = self.query_conv(x_q) # (8, 128, 20, 10)
-        proj_query = proj_query.view((n, num_heads, self.qk_embed_dim, h * w)) # (8, 8, 16, 200)
-        proj_query = proj_query.permute(0, 1, 3, 2) # (8, 8, 200, 16)
+        proj_query = self.query_conv(x_q)  # (8, 128, 20, 10)
+        proj_query = proj_query.view(
+            (n, num_heads, self.qk_embed_dim, h * w))  # (8, 8, 16, 200) (C, N)
+        proj_query = proj_query.permute(0, 1, 3, 2)  # (8, 8, 200, 16) (N, C)
 
         # k ==============================================
-        proj_key = self.key_conv(x_kv) # (8, 128, 20, 10)
-        proj_key = proj_key.view((n, num_heads, self.qk_embed_dim, h_kv * w_kv)) # (8, 8, 16, 200)
+        proj_key = self.key_conv(x_kv)  # (8, 128, 20, 10)
+        # (8, 8, 16, 200) (C, N)
+        proj_key = proj_key.view(
+            (n, num_heads, self.qk_embed_dim, h_kv * w_kv))
 
         # position =========================================
         # x:(10, 10, 64) y:(20, 20, 64)
@@ -681,76 +704,100 @@ class SpatialTR(nn.Module):
             h, w, h_kv, w_kv, self.q_stride, self.kv_stride,
             x_input.device, x_input.dtype, self.position_embedding_dim)
         # (n, num_heads, w, w_kv, dim)
-        position_feat_x = self.appr_geom_fc_x(position_embed_x) # (10, 10, 128)
-        position_feat_x = position_feat_x.view(1, w, w_kv, num_heads, self.qk_embed_dim) # (1, 10, 10, 8, 16)
-        position_feat_x = position_feat_x.permute(0, 3, 1, 2, 4) # (1, 8, 10, 10, 16)
-        position_feat_x = position_feat_x.repeat(n, 1, 1, 1, 1) # (8, 8, 10, 10, 16)
+        position_feat_x = self.appr_geom_fc_x(
+            position_embed_x)  # (10, 10, 128)
+        position_feat_x = position_feat_x.view(
+            1, w, w_kv, num_heads, self.qk_embed_dim)  # (1, 10, 10, 8, 16)
+        position_feat_x = position_feat_x.permute(
+            0, 3, 1, 2, 4)  # (1, 8, 10, 10, 16)
+        position_feat_x = position_feat_x.repeat(
+            n, 1, 1, 1, 1)  # (8, 8, 10, 10, 16)
         # position_feat_x: (8, 8, 10, 10, 16)
-        
+
         # (n, num_heads, h, h_kv, dim)
-        position_feat_y = self.appr_geom_fc_y(position_embed_y) # (20, 20, 128)
-        position_feat_y = position_feat_y.view(1, h, h_kv, num_heads, self.qk_embed_dim) # (1, 20, 20, 8, 16)
-        position_feat_y = position_feat_y.permute(0, 3, 1, 2, 4) # (1, 8, 20, 20, 16)
-        position_feat_y = position_feat_y.repeat(n, 1, 1, 1, 1) # (8, 8, 20, 20, 16)
+        position_feat_y = self.appr_geom_fc_y(
+            position_embed_y)  # (20, 20, 128)
+        position_feat_y = position_feat_y.view(
+            1, h, h_kv, num_heads, self.qk_embed_dim)  # (1, 20, 20, 8, 16)
+        position_feat_y = position_feat_y.permute(
+            0, 3, 1, 2, 4)  # (1, 8, 20, 20, 16)
+        position_feat_y = position_feat_y.repeat(
+            n, 1, 1, 1, 1)  # (8, 8, 20, 20, 16)
         # position_feat_y: (8, 8, 20, 20, 16)
 
-        position_feat_x /= math.sqrt(2) # (8, 8, 10, 10, 16)
-        position_feat_y /= math.sqrt(2) # (8, 8, 20, 20, 16)
- 
+        position_feat_x /= math.sqrt(2)  # (8, 8, 10, 10, 16)
+        position_feat_y /= math.sqrt(2)  # (8, 8, 20, 20, 16)
+
         # init empty energy ========================================
         # (8, 8, 20, 10, 20, 10)
-        energy = torch.zeros(n, num_heads, h, w, h_kv, w_kv, dtype=x_input.dtype, device=x_input.device) 
+        energy = torch.zeros(n, num_heads, h, w, h_kv, w_kv,
+                             dtype=x_input.dtype, device=x_input.device)
 
         # parameter ==========================================
-        # (8, 8, 1, 16)
-        appr_bias = self.appr_bias.view(1, num_heads, 1, self.qk_embed_dim).repeat(n, 1, 1, 1)
+        # (8, 8, 1, 16) (1, C)
+        appr_bias = self.appr_bias.view(
+            1, num_heads, 1, self.qk_embed_dim).repeat(n, 1, 1, 1)
 
         # key content only ====================================
-        energy_key = torch.matmul(appr_bias, proj_key) # (8, 8, 1, 200)
-        energy_key = energy_key.view(n, num_heads, 1, 1, h_kv, w_kv) # (8, 8, 1, 1, 20, 10)
-        energy += energy_key # (8, 8, 20, 10, 20, 10)
+        energy_key = torch.matmul(appr_bias, proj_key)  # (8, 8, 1, 200) (1, N)
+        energy_key = energy_key.view(
+            n, num_heads, 1, 1, h_kv, w_kv)  # (8, 8, 1, 1, 20, 10)
+        energy += energy_key  # (8, 8, 20, 10, 20, 10) (1, N)->(N, N)
 
-        # Q x position ===============================================    
-        proj_query_reshape = proj_query.view(n, num_heads, h, w, self.qk_embed_dim) # (8, 8, 20, 10, 16)
-        proj_query_reshape = proj_query_reshape.permute(0, 1, 3, 2, 4) # (8, 8, 10, 20, 16)
-        position_feat_x_reshape = position_feat_x.permute(0, 1, 2, 4, 3) # (8, 8, 10, 16, 10)
-        position_feat_y_reshape = position_feat_y.permute(0, 1, 2, 4, 3) # (8, 8, 20, 16, 20)
+        # Q x position ===============================================
+        proj_query_reshape = proj_query.view(
+            n, num_heads, h, w, self.qk_embed_dim)  # (8, 8, 20, 10, 16)
+        proj_query_reshape = proj_query_reshape.permute(
+            0, 1, 3, 2, 4)  # (8, 8, 10, 20, 16)
+        position_feat_x_reshape = position_feat_x.permute(
+            0, 1, 2, 4, 3)  # (8, 8, 10, 16, 10)
+        position_feat_y_reshape = position_feat_y.permute(
+            0, 1, 2, 4, 3)  # (8, 8, 20, 16, 20)
 
-        energy_x = torch.matmul(proj_query_reshape, position_feat_x_reshape) # (8, 8, 10, 20, 10)
-        energy_x = energy_x.permute(0, 1, 3, 2, 4).unsqueeze(4) # (8, 8, 20, 10, 1, 10)
-        
-        proj_query_reshape = proj_query_reshape.permute(0, 1, 3, 2, 4) # (8, 8, 20, 10, 16)
-        energy_y = torch.matmul(proj_query_reshape, position_feat_y_reshape) # (8, 8, 20, 10, 20)
-        energy_y = energy_y.unsqueeze(5) # (8, 8, 20, 10, 20, 1)
+        energy_x = torch.matmul(
+            proj_query_reshape, position_feat_x_reshape)  # (8, 8, 10, 20, 10)
+        energy_x = energy_x.permute(0, 1, 3, 2, 4).unsqueeze(
+            4)  # (8, 8, 20, 10, 1, 10)
 
-        energy += energy_x + energy_y # (8, 8, 20, 10, 20, 10)
-        
+        proj_query_reshape = proj_query_reshape.permute(
+            0, 1, 3, 2, 4)  # (8, 8, 20, 10, 16)
+        energy_y = torch.matmul(
+            proj_query_reshape, position_feat_y_reshape)  # (8, 8, 20, 10, 20)
+        energy_y = energy_y.unsqueeze(5)  # (8, 8, 20, 10, 20, 1)
+
+        energy += energy_x + energy_y  # (8, 8, 20, 10, 20, 10) (N, N)
+
         # ==========================================================
-        energy = energy.view(n, num_heads, h * w, h_kv * w_kv) # (8, 8, 200, 200)
+        energy = energy.view(n, num_heads, h * w, h_kv *
+                             w_kv)  # (8, 8, 200, 200)
 
         # attention map ==========================================================
-        attention = F.softmax(energy, 3) # (8, 8, 200, 200)
-        
+        attention = F.softmax(energy, 3)  # (8, 8, 200, 200)
+
         # V ==========================================================
-        proj_value = self.value_conv(x_kv) # (8, 128, 20, 10)
-        proj_value_reshape = proj_value.view((n, num_heads, self.v_dim, h_kv * w_kv)) # (8, 8, 16, 200)
-        proj_value_reshape = proj_value_reshape.permute(0, 1, 3, 2) # (8, 8, 200, 16)
+        proj_value = self.value_conv(x_kv)  # (8, 128, 20, 10)
+        proj_value_reshape = proj_value.view(
+            (n, num_heads, self.v_dim, h_kv * w_kv))  # (8, 8, 16, 200)
+        proj_value_reshape = proj_value_reshape.permute(
+            0, 1, 3, 2)  # (8, 8, 200, 16)
 
         # attention x V ==========================================================
-        out = torch.matmul(attention, proj_value_reshape) # (8, 8, 200, 16)
-        out = out.permute(0, 1, 3, 2) # (8, 8, 16, 200)
-        out = out.contiguous().view(n, self.v_dim * self.num_heads, h, w) # (8, 128, 20, 10)
-    
-        # 1x1 ==========================================================    
-        out = self.proj_conv(out) # (8, 128, 20, 10)
+        out = torch.matmul(attention, proj_value_reshape)  # (8, 8, 200, 16)
+        out = out.permute(0, 1, 3, 2)  # (8, 8, 16, 200)
+        out = out.contiguous().view(n, self.v_dim * self.num_heads, h, w)  # (8, 128, 20, 10)
+
+        # 1x1 ==========================================================
+        out = self.proj_conv(out)  # (8, 128, 20, 10)
 
         # output is downsampled, upsample back to input size
-        out = F.interpolate(out, size=x_input.shape[2:], mode='bilinear', align_corners=False) # (8, 128, 40, 20)
-            
-        out = self.gamma * out + x_input # (8, 128, 40, 20)
+        # (8, 128, 40, 20)
+        out = F.interpolate(
+            out, size=x_input.shape[2:], mode='bilinear', align_corners=False)
+
+        out = self.gamma * out + x_input  # (8, 128, 40, 20)
         # out = self.norm_conv(out)
         # out = self.norm(out)
-        
+
         return out
 
     def get_position_embedding(self,
@@ -812,8 +859,9 @@ class SpatialTR(nn.Module):
                 nn.init.constant_(m.bias, 0)
                 nn.init.constant_(m.weight, 1.0)
 
+
 if __name__ == '__main__':
-    
+
     # # test attention_type='1000'
     # imgs = torch.randn(2, 16, 20, 20)
     # gen_attention_block = GeneralizedAttention(16, attention_type='1000')
@@ -838,7 +886,7 @@ if __name__ == '__main__':
     out = model(imgs)
     print(out.shape)
     assert out.shape == imgs.shape
-    
+
     from fvcore.nn import FlopCountAnalysis
     from fvcore.nn import flop_count_table
     flops = FlopCountAnalysis(model, imgs)

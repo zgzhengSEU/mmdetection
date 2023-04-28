@@ -277,14 +277,51 @@ set +x
 # python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_final/cascade-rcnn_r50_fpn_1x_rsb_tinyanchor_SCPAFPN_TR-SC1_DCNv2_tinyDH-GIOU.py --amp
 # clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_TR-SC1.py --amp
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_TR-SC1.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_DCNv2.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyDH.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_tinyDH.py --amp
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/retinanet_r50_fpn.py
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/fcos_r50_fpn.py
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/faster-rcnn_r50_fpn.py
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/centernet_r50_fpn.py
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/dino-4scale_r50_8xb2-24e_coco.py
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/cornernet_hourglass104.py
+# clear
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/cornernet_hourglass104.py --resume /home/gp.sc.cc.tohoku.ac.jp/duanct/openmmlab/mmdet3/work_dirs/VisDrone/cornernet_hourglass104/20230427_101150/epoch_93.pth
+
+# python tools/train.py myconfig/VisDrone-H100/baseline/centernet_r50_fpn.py
+# clear
+
+python tools/train.py myconfig/VisDrone-H100/baseline/retinanet_r50_fpn.py
 clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_SCPAFPN_DCNv2.py --amp
+python tools/train.py myconfig/VisDrone-H100/baseline/fcos_r50_fpn.py
 clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyDH.py --amp
+python tools/train.py myconfig/VisDrone-H100/baseline/faster-rcnn_r50_fpn.py
 clear
 
-python tools/train.py myconfig/VisDrone-H100/cascade_rcnn_x50/cascade-rcnn_x50-32x4d_fpn_1x_tinyanchor_tinyDH.py --amp
+python tools/train.py myconfig/VisDrone-H100/baseline/dino-1scale_r50.py
 clear
+
+python tools/train.py myconfig/VisDrone-H100/baseline/sparse-rcnn_r50_fpn.py

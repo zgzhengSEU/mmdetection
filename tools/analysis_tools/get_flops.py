@@ -236,7 +236,9 @@ def main():
     logger = MMLogger.get_instance(name='MMLogger')
     if args.old:
         result = old_inference(args, logger)
+        print("================================= fvcore flops ==========================================")
         print(flop_count_table(result['fvcore_flops']))
+        print("================================= fvcore flops end ======================================")
     else:
         result = inference(args, logger)
     split_line = '=' * 30
