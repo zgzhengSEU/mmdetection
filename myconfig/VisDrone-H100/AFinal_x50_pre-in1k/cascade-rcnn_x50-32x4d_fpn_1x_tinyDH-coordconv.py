@@ -8,8 +8,8 @@ _base_ = [
 
 # ===========================================
 TAGS = ["casc_x50-32x4d_fpn_1x", 'DH']
-GROUP_NAME = "cascade-rcnn"
-ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_tinyDH"
+GROUP_NAME = "cascade-rcnn-final"
+ALGO_NAME = "cascade-rcnn_x50-32x4d_fpn_1x_tinyDH-coordconv"
 DATASET_NAME = "VisDrone"
 
 Wandb_init_kwargs = dict(
@@ -45,7 +45,6 @@ test_num_workers = 2
 train_dataloader = dict(batch_size=train_batch_size_per_gpu, num_workers=train_num_workers)
 val_dataloader = dict(batch_size=val_batch_size_per_gpu, num_workers=val_num_workers)
 test_dataloader = dict(batch_size=test_batch_size_per_gpu, num_workers=test_num_workers)
-
 # ==================================================================================================================================================
 
 
@@ -70,7 +69,8 @@ model = dict(
         bbox_head=[
             dict(
                 type='DoubleConvFCBBoxHead',
-                num_convs=4, # new
+                use_coordconv= True,
+                num_convs=3, # new
                 num_fcs=2, # new
                 conv_out_channels=1024, # new
                 fc_out_channels=1024,
@@ -90,7 +90,8 @@ model = dict(
                                loss_weight=1.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
-                num_convs=3, # new
+                use_coordconv= True,
+                num_convs=2, # new
                 num_fcs=2, # new
                 conv_out_channels=1024, # new
                 fc_out_channels=1024,
@@ -110,7 +111,8 @@ model = dict(
                                loss_weight=1.0)),
             dict(
                 type='DoubleConvFCBBoxHead',
-                num_convs=2, # new
+                use_coordconv= True,
+                num_convs=1, # new
                 num_fcs=2, # new
                 conv_out_channels=1024, # new
                 fc_out_channels=1024,

@@ -6,11 +6,15 @@ from mmcv.cnn import ConvModule
 from mmengine.model import BaseModule, ModuleList
 from torch import Tensor
 
-from mmdet.models.backbones.resnet import Bottleneck
+# from mmdet.models.backbones.resnet import Bottleneck
 from mmdet.registry import MODELS
 from mmdet.utils import ConfigType, MultiConfig, OptConfigType, OptMultiConfig
 from .bbox_head import BBoxHead
 
+# new add
+from ...layers import CoordConv2d
+from mmcv.cnn import build_conv_layer, build_norm_layer, build_plugin_layer
+import torch.utils.checkpoint as cp
 
 class BasicResBlock(BaseModule):
     """Basic residual block.
@@ -34,18 +38,30 @@ class BasicResBlock(BaseModule):
                  out_channels: int,
                  conv_cfg: OptConfigType = None,
                  norm_cfg: ConfigType = dict(type='BN'),
-                 init_cfg: OptMultiConfig = None) -> None:
+                 init_cfg: OptMultiConfig = None,
+                 use_coordconv: bool = False) -> None:
         super().__init__(init_cfg=init_cfg)
 
         # main path
-        self.conv1 = ConvModule(
-            in_channels,
-            in_channels,
-            kernel_size=3,
-            padding=1,
-            bias=False,
-            conv_cfg=conv_cfg,
-            norm_cfg=norm_cfg)
+        if use_coordconv: 
+            self.conv1 = CoordConv2d(
+                in_channels,
+                in_channels,
+                kernel_size=3,
+                padding=1,
+                bias=False,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                with_r=True)
+        else:
+            self.conv1 = ConvModule(
+                in_channels,
+                in_channels,
+                kernel_size=3,
+                padding=1,
+                bias=False,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg)
         self.conv2 = ConvModule(
             in_channels,
             out_channels,
@@ -80,6 +96,142 @@ class BasicResBlock(BaseModule):
         return out
 
 
+class Bottleneck(BaseModule):
+    expansion = 4
+
+    def __init__(self,
+                 inplanes,
+                 planes,
+                 stride=1,
+                 dilation=1,
+                 downsample=None,
+                 style='pytorch',
+                 conv_cfg=None,
+                 norm_cfg=dict(type='BN'),
+                 plugins=None,
+                 init_cfg=None,
+                 use_coordconv=False):
+        """Bottleneck block for ResNet.
+
+        If style is "pytorch", the stride-two layer is the 3x3 conv layer, if
+        it is "caffe", the stride-two layer is the first 1x1 conv layer.
+        """
+        super(Bottleneck, self).__init__(init_cfg)
+        assert style in ['pytorch', 'caffe']
+        assert plugins is None or isinstance(plugins, list)
+
+        self.inplanes = inplanes
+        self.planes = planes
+        self.stride = stride
+        self.dilation = dilation
+        self.style = style
+        self.conv_cfg = conv_cfg
+        self.norm_cfg = norm_cfg
+        self.use_coordconv = use_coordconv
+        
+        if self.style == 'pytorch':
+            self.conv1_stride = 1
+            self.conv2_stride = stride
+        else:
+            self.conv1_stride = stride
+            self.conv2_stride = 1
+
+        self.norm1_name, norm1 = build_norm_layer(norm_cfg, planes, postfix=1)
+        self.norm2_name, norm2 = build_norm_layer(norm_cfg, planes, postfix=2)
+        self.norm3_name, norm3 = build_norm_layer(
+            norm_cfg, planes * self.expansion, postfix=3)
+
+        self.conv1 = build_conv_layer(
+            conv_cfg,
+            inplanes,
+            planes,
+            kernel_size=1,
+            stride=self.conv1_stride,
+            bias=False)
+        self.add_module(self.norm1_name, norm1)
+
+        if self.use_coordconv:
+            self.conv2 = CoordConv2d(
+                in_channels=planes,
+                out_channels=planes,
+                kernel_size=3,
+                stride=self.conv2_stride,
+                padding=dilation,
+                dilation=dilation,
+                bias=False,
+                conv_cfg=conv_cfg,
+                with_r=True
+            )
+        else:
+            self.conv2 = build_conv_layer(
+                conv_cfg,
+                planes,
+                planes,
+                kernel_size=3,
+                stride=self.conv2_stride,
+                padding=dilation,
+                dilation=dilation,
+                bias=False)
+        self.add_module(self.norm2_name, norm2)
+        
+        self.conv3 = build_conv_layer(
+            conv_cfg,
+            planes,
+            planes * self.expansion,
+            kernel_size=1,
+            bias=False)
+        self.add_module(self.norm3_name, norm3)
+
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+
+    @property
+    def norm1(self):
+        """nn.Module: normalization layer after the first convolution layer"""
+        return getattr(self, self.norm1_name)
+
+    @property
+    def norm2(self):
+        """nn.Module: normalization layer after the second convolution layer"""
+        return getattr(self, self.norm2_name)
+
+    @property
+    def norm3(self):
+        """nn.Module: normalization layer after the third convolution layer"""
+        return getattr(self, self.norm3_name)
+
+    def forward(self, x):
+        """Forward function."""
+
+        def _inner_forward(x):
+            identity = x
+            out = self.conv1(x)
+            out = self.norm1(out)
+            out = self.relu(out)
+
+
+            out = self.conv2(out)
+            out = self.norm2(out)
+            out = self.relu(out)
+
+
+            out = self.conv3(out)
+            out = self.norm3(out)
+
+            if self.downsample is not None:
+                identity = self.downsample(x)
+
+            out += identity
+
+            return out
+
+        out = _inner_forward(x)
+
+        out = self.relu(out)
+
+        return out
+
+
 @MODELS.register_module()
 class DoubleConvFCBBoxHead(BBoxHead):
     r"""Bbox head used in Double-Head R-CNN
@@ -96,6 +248,7 @@ class DoubleConvFCBBoxHead(BBoxHead):
     """  # noqa: W605
 
     def __init__(self,
+                 use_coordconv: bool = False,
                  num_convs: int = 0,
                  num_fcs: int = 0,
                  conv_out_channels: int = 1024,
@@ -124,7 +277,7 @@ class DoubleConvFCBBoxHead(BBoxHead):
         self.fc_out_channels = fc_out_channels
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
-
+        self.use_coordconv = use_coordconv
         # increase the channel of input features
         self.res_block = BasicResBlock(self.in_channels,
                                        self.conv_out_channels)

@@ -8,7 +8,7 @@ class visdrone_evaluate(object):
         self.annotations_dir = annotations_dir
         self.det_annotations_dir = det_annotations_dir
     
-    def run_eval(self):
+    def run_eval(self, print_result=True):
         gt_dir = osp.join(self.annotations_dir)
         img_dir = osp.join(self.annotations_dir.replace('annotations', 'images'))
 
@@ -38,17 +38,20 @@ class visdrone_evaluate(object):
         ap_all, ap_50, ap_75, ar_1, ar_10, ar_100, ar_500, ap_classwise = self.eval_det(
             all_gt, all_det, allheight, allwidth, per_class=True)
 
-        print('Average Precision  (AP) @[ IoU=0.50:0.95 | maxDets=500 ] = {}%.'.format(ap_all))
-        print('Average Precision  (AP) @[ IoU=0.50      | maxDets=500 ] = {}%.'.format(ap_50))
-        print('Average Precision  (AP) @[ IoU=0.75      | maxDets=500 ] = {}%.'.format(ap_75))
-        print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets=  1 ] = {}%.'.format(ar_1))
-        print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets= 10 ] = {}%.'.format(ar_10))
-        print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets=100 ] = {}%.'.format(ar_100))
-        print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets=500 ] = {}%.'.format(ar_500))
+        if print_result:
+            print('Average Precision  (AP) @[ IoU=0.50:0.95 | maxDets=500 ] = {}%.'.format(ap_all))
+            print('Average Precision  (AP) @[ IoU=0.50      | maxDets=500 ] = {}%.'.format(ap_50))
+            print('Average Precision  (AP) @[ IoU=0.75      | maxDets=500 ] = {}%.'.format(ap_75))
+            print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets=  1 ] = {}%.'.format(ar_1))
+            print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets= 10 ] = {}%.'.format(ar_10))
+            print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets=100 ] = {}%.'.format(ar_100))
+            print('Average Recall     (AR) @[ IoU=0.50:0.95 | maxDets=500 ] = {}%.'.format(ar_500))
 
-        for i, ap in enumerate(ap_classwise):
-            print('Class {} AP = {}%'.format(i, ap))
-
+            for i, ap in enumerate(ap_classwise):
+                print('Class {} AP = {}%'.format(i, ap))
+            
+        return ap_all, ap_50, ap_75, ar_1, ar_10, ar_100, ar_500, ap_classwise
+        
     def open_label_file(self, path, dtype=np.float32):
         label = np.loadtxt(path, delimiter=',', dtype=dtype, ndmin=2, usecols=range(8))
         if not len(label):

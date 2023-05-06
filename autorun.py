@@ -28,7 +28,7 @@ if __name__ == '__main__':
     pythonpath = '/home/gp.sc.cc.tohoku.ac.jp/duanct/miniconda3/envs/mmdet3/bin/python'
     tools = 'tools/train.py'
     mmdet3path = '/home/gp.sc.cc.tohoku.ac.jp/duanct/openmmlab/mmdet3/'
-    config = 'myconfig/VisDrone-H100/cascade_rcnn_new/cascade-rcnn_r50_fpn_1x_rsb_PAFPN_CARAFE_Skip_Parallel_ontput.py'
+    config = 'myconfig/VisDrone-H100/baseline/cascade-rcnn_x101-64x4d_fpn_2x_DEanchor_SCPAFPNFinal_TR-SC1_DCNv2_tinyDH-coordconv.py'
     amp = '--amp'
     cmd = f'{pythonpath} {tools} {mmdet3path}{config} {amp}'
     os.system(str(f'cd {mmdet3path}'))

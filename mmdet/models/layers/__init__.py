@@ -35,7 +35,7 @@ from .transformer import (MLP, AdaptivePadding, CdnQueryGenerator,
                           Mask2FormerTransformerEncoder, PatchEmbed,
                           PatchMerging, coordinate_to_encoding,
                           inverse_sigmoid, nchw_to_nlc, nlc_to_nchw)
-
+from .coordconv import CoordConv2d
 # yapf: enable
 
 __all__ = [
@@ -57,5 +57,5 @@ __all__ = [
     'DABDetrTransformerEncoder', 'ConditionalDetrTransformerDecoder',
     'ConditionalDetrTransformerDecoderLayer', 'DinoTransformerDecoder',
     'CdnQueryGenerator', 'Mask2FormerTransformerEncoder',
-    'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder'
+    'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder', 'CoordConv2d'
 ]

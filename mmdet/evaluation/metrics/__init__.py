@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .cityscapes_metric import CityScapesMetric
 from .coco_metric import CocoMetric
+from .visdrone_coco_metric import VisDrone_CocoMetric
 from .coco_occluded_metric import CocoOccludedSeparatedMetric
 from .coco_panoptic_metric import CocoPanopticMetric
 from .crowdhuman_metric import CrowdHumanMetric
@@ -13,5 +14,5 @@ from .voc_metric import VOCMetric
 __all__ = [
     'CityScapesMetric', 'CocoMetric', 'CocoPanopticMetric', 'OpenImagesMetric',
     'VOCMetric', 'LVISMetric', 'CrowdHumanMetric', 'DumpProposals',
-    'CocoOccludedSeparatedMetric', 'DumpDetResults'
+    'CocoOccludedSeparatedMetric', 'DumpDetResults', 'VisDrone_CocoMetric'
 ]
